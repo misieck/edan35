@@ -333,15 +333,7 @@ int main()
 			CelestialBody* body;
 			glm::mat4 parent_transform;
 		};
-		// TODO: Replace this explicit rendering of the Earth and Moon
-		// with a traversal of the scene graph and rendering of all its
-		// nodes.
-		auto children = earth.get_children();
-
-		for(auto child: children){
-			
-
-		}
+		
 
         dfs_render(&sun, animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), show_basis);
         
