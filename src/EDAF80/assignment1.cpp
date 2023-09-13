@@ -15,6 +15,19 @@
 
 using std::vector;
 
+void dfs_render(CelestialBody* body,
+                std::chrono::microseconds elapsed_time,
+                glm::mat4 const& view_projection,
+                glm::mat4 const& parent_transform,
+                bool show_basis)
+{
+  glm::mat4 ctransform = body->render(elapsed_time, view_projection, parent_transform, show_basis);
+
+  for ( auto child: body->get_children() ){
+    dfs_render(child, elapsed_time,view_projection,ctransform,show_basis);
+  }
+    
+}
 
 int main()
 {
@@ -162,13 +175,14 @@ int main()
 	// Set up the celestial bodies.
 	//
 	CelestialBody moon(sphere, &celestial_body_shader, moon_texture);
-	moon.set_scale(glm::vec3(0.3f));
+	moon.set_scale(moon_scale);
 	moon.set_spin(moon_spin);
-	moon.set_orbit({1.5f, glm::radians(-66.0f), glm::two_pi<float>() / 1.3f});
+	moon.set_orbit(moon_orbit);
 
 	CelestialBody earth(sphere, &celestial_body_shader, earth_texture);
-	earth.set_spin(earth_spin);
-	earth.set_orbit({-2.5f, glm::radians(-7.2f), glm::two_pi<float>() / 10.0f});			//changed this 
+    earth.set_scale(earth_scale);
+    earth.set_spin(earth_spin);
+	earth.set_orbit(earth_orbit);			//changed this 
 	earth.add_child(&moon);
 
 
@@ -258,10 +272,9 @@ int main()
 			
 
 		}
-		auto transform = earth.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)), show_basis);
-		moon.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), transform, show_basis);
 
-
+        dfs_render(&earth, animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)), show_basis);
+        
 		//
 		// Add controls to the scene.
 		//

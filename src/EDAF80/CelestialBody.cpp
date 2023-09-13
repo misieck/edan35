@@ -30,7 +30,12 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 
 	//I changed this here 
 	//glm::mat4 world = parent_transform;
-	
+
+
+//second scaling (rugby ball)
+	glm::vec3 scaleFactorsrugby(1.0f, 0.82f, 0.62f);
+	//set_scale(scaleFactorsrugby);
+    
 	//scale factor 
 	glm::vec3 scaleFactorsidentity = _body.scale;
 
@@ -38,20 +43,13 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	glm::mat4 identityMatrix = glm::mat4(1.0f);
 
 	//scaling
-	glm::mat4 world = glm::scale(identityMatrix, scaleFactorsidentity);
+	glm::mat4 S = glm::scale(identityMatrix, scaleFactorsidentity);
 
 	
-	//second scaling (rugby ball)
-	glm::vec3 scaleFactorsrugby(1.0f, 0.2f, 0.2f);
-	set_scale(scaleFactorsrugby);
-
-	/*
-	//spinning 
+   	//spinning 
 	_body.spin.rotation_angle += _body.spin.speed * elapsed_time_s; 											//[rad] = [rad/s] * [s] 
 	glm::mat4 R1s = glm::rotate(identityMatrix, _body.spin.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));  		//y-axis
 	
-	printf("%f\n", elapsed_time_s);
-	printf("%f\n", _body.spin.rotation_angle);
 	//world = R1s;
 
 	//tilting
@@ -71,11 +69,11 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	glm::mat4 R2o = glm::rotate(identityMatrix, _body.orbit.inclination, glm::vec3(0.0f, 0.0f, 1.0f));
 
 
-	world = parent_transform * R2o * R1o * To * R2s * R1s;
+    glm::mat4 world = parent_transform * R2o * R1o * To * R2s * R1s * S;
 	
 	glm::mat4 child_transform = parent_transform * R2o * R1o * To;
 
-	*/
+	
 	if (show_basis)
 	{
 		bonobo::renderBasis(1.0f, 2.0f, view_projection, world);
@@ -89,8 +87,8 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	// world matrix.
 	_body.node.render(view_projection, world);
 
-	return world;
-	//return child_transform;
+	
+	return child_transform;
 }
 
 void CelestialBody::add_child(CelestialBody* child)
