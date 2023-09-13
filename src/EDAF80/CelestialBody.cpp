@@ -75,7 +75,7 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	glm::mat4 child_transform = parent_transform * orbitTilt * orbitRotate * translate * spintRotateCompensate * spinTilt;
     //glm::mat4 world = child_transform * R3s * R2s * R1s * S;
 	glm::mat4 world = child_transform * spinRotate * scale;
-	
+	this->world = world;
 
 	
 	if (show_basis)
@@ -83,7 +83,7 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 		bonobo::renderBasis(1.0f, 2.0f, view_projection, world);
 	}
 
-	// Note: The second argument of `node::render()` is supposed to be the
+	// Note: The second argument of `nodeb::render()` is supposed to be the
 	// parent transform of the node, not the whole world matrix, as the
 	// node internally manages its local transforms. However in our case we
 	// manage all the local transforms ourselves, so the internal transform

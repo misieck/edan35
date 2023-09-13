@@ -78,7 +78,7 @@ public:
 	void set_ring(bonobo::mesh_data const& shape, GLuint const* program,
 	              GLuint diffuse_texture_id,
 	              glm::vec2 const& scale = glm::vec2(1.0f));
-
+  glm::mat4 world;
 private:
 	struct {
 		Node node;

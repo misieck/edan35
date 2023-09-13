@@ -7,6 +7,7 @@
 #include "core/node.hpp"
 #include "core/ShaderProgramManager.hpp"
 
+#include <glm/gtc/matrix_access.hpp>
 #include <imgui.h>
 
 #include <clocale>
@@ -22,11 +23,11 @@ void dfs_render(CelestialBody* body,
                 bool show_basis)
 {
   glm::mat4 ctransform = body->render(elapsed_time, view_projection, parent_transform, show_basis);
-
+ 
   for ( auto child: body->get_children() ){
     dfs_render(child, elapsed_time,view_projection,ctransform,show_basis);
   }
-    
+  
 }
 
 int main()
@@ -44,7 +45,7 @@ int main()
 	// Set up the camera
 	//
 	InputHandler input_handler;
-	FPSCameraf camera(0.5f * glm::half_pi<float>(),
+	FPSCameraf camera( 0.9f * glm::half_pi<float>(),
 	                  static_cast<float>(config::resolution_x) / static_cast<float>(config::resolution_y),
 	                  0.01f, 1000.0f);
 	camera.mWorld.SetTranslate(glm::vec3(0.0f, 4.0f, 20.0f));
@@ -132,6 +133,7 @@ int main()
 	glm::vec3 const moon_scale{ 0.01f };
 	SpinConfiguration const moon_spin{ glm::radians(-6.7f), glm::two_pi<float>() / 1.3f };
 	OrbitConfiguration const moon_orbit{ 0.2f, glm::radians(29.0f), glm::two_pi<float>() / 1.3f };
+    OrbitConfiguration const camera_orbit{ 1.f, glm::radians(29.0f), glm::two_pi<float>() / 500.3f };
 
 	glm::vec3 const mars_scale{ 0.03f };
 	SpinConfiguration const mars_spin{ glm::radians(-25.0f), glm::two_pi<float>() / 3.0f };
@@ -174,7 +176,11 @@ int main()
 	//
 	// Set up the celestial bodies.
 	//
-	CelestialBody moon(sphere, &celestial_body_shader, moon_texture);
+    CelestialBody cameraObject(sphere, &celestial_body_shader, moon_texture);
+    cameraObject.set_scale( glm::vec3 (.0f) );
+    cameraObject.set_orbit(camera_orbit);
+    
+    CelestialBody moon(sphere, &celestial_body_shader, moon_texture);
 	moon.set_scale(moon_scale);
 	moon.set_spin(moon_spin);
 	moon.set_orbit(moon_orbit);
@@ -184,6 +190,7 @@ int main()
     earth.set_spin(earth_spin);
 	earth.set_orbit(earth_orbit);			
 	earth.add_child(&moon);
+    earth.add_child(&cameraObject);
 
 /*	CelestialBody moon(sphere, &celestial_body_shader, moon_texture);
 	moon.set_scale(glm::vec3(0.6f));
@@ -336,8 +343,19 @@ int main()
 		
 
         dfs_render(&sun, animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), show_basis);
-        
-		//
+
+        auto col = glm::column(cameraObject.world, 3);
+        float camx = cameraObject.world[3][0];
+        float camy = cameraObject.world[3][1];
+        float camz = cameraObject.world[3][2];
+        float lookx = earth.world[3][0];
+        float looky = earth.world[3][1];
+        float lookz = earth.world[3][2];
+        camera.mWorld.SetTranslate(glm::vec3(camx, camy, camz));
+        camera.mWorld.LookAt(glm::vec3(lookx,looky,lookz));
+
+
+        //
 		// Add controls to the scene.
 		//
 		bool const opened = ImGui::Begin("Scene controls", nullptr, ImGuiWindowFlags_None);
