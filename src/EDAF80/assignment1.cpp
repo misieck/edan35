@@ -47,7 +47,7 @@ int main()
 	FPSCameraf camera(0.5f * glm::half_pi<float>(),
 	                  static_cast<float>(config::resolution_x) / static_cast<float>(config::resolution_y),
 	                  0.01f, 1000.0f);
-	camera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 6.0f));
+	camera.mWorld.SetTranslate(glm::vec3(0.0f, 4.0f, 20.0f));
 	camera.mWorld.LookAt(glm::vec3(0.0f));
 	camera.mMouseSensitivity = glm::vec2(0.003f);
 	camera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
@@ -130,7 +130,7 @@ int main()
 	OrbitConfiguration const earth_orbit{ 4.0f, glm::radians(-7.2f), glm::two_pi<float>() / 20.0f };
 
 	glm::vec3 const moon_scale{ 0.01f };
-	SpinConfiguration const moon_spin{ glm::radians(-6.7f), glm::two_pi<float>() / 90.0f };
+	SpinConfiguration const moon_spin{ glm::radians(-6.7f), glm::two_pi<float>() / 1.3f };
 	OrbitConfiguration const moon_orbit{ 0.2f, glm::radians(29.0f), glm::two_pi<float>() / 1.3f };
 
 	glm::vec3 const mars_scale{ 0.03f };
@@ -185,6 +185,16 @@ int main()
 	earth.set_orbit(earth_orbit);			
 	earth.add_child(&moon);
 
+/*	CelestialBody moon(sphere, &celestial_body_shader, moon_texture);
+	moon.set_scale(glm::vec3(0.6f));
+	moon.set_spin({ glm::radians(-6.7f), glm::two_pi<float>() / 4.3f });
+	moon.set_orbit({2.5f, glm::radians(16.0f), glm::two_pi<float>() / 4.3f});
+
+//	CelestialBody earth(sphere, &celestial_body_shader, earth_texture);
+	earth.set_spin(earth_spin);
+	earth.set_orbit({-3.5f, glm::radians(0.0f), glm::two_pi<float>() / 10.0f});
+	earth.add_child(&moon);
+*/
 
 	CelestialBody mercury(sphere, &celestial_body_shader, mercury_texture);
 	mercury.set_scale(mercury_scale);
@@ -214,6 +224,8 @@ int main()
 	saturn.set_scale(saturn_scale);
 	saturn.set_spin(saturn_spin);
 	saturn.set_orbit(saturn_orbit);	
+	saturn.set_ring(saturn_ring_shape, &celestial_body_shader, saturn_ring_texture, saturn_ring_scale);
+
 
 
 	CelestialBody uranus(sphere, &celestial_body_shader, uranus_texture);
@@ -331,7 +343,7 @@ int main()
 
 		}
 
-        dfs_render(&sun, animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), show_basis);
+        dfs_render(&sun, animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), show_basis);
         
 		//
 		// Add controls to the scene.

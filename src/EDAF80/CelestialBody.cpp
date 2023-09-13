@@ -56,12 +56,15 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	glm::mat4 R2s = glm::rotate(identityMatrix, _body.spin.axial_tilt, glm::vec3(0.0f, 0.0f, 1.0f));			//z-axis
 	
 
+	//spinning[back] 
+	_body.orbit.rotation_angle += _body.orbit.speed * elapsed_time_s;
+	glm::mat4 R3s = glm::rotate(identityMatrix, _body.orbit.rotation_angle, glm::vec3(0.0f, -1.0f, 0.0f));  		//y-axis
+
 	//translate 
 	glm::mat4 To = glm::translate(identityMatrix, glm::vec3(_body.orbit.radius, 0.0f, 0.0f));					//x-axis
 
 
 	//rotate orbit 
-	_body.orbit.rotation_angle += _body.orbit.speed * elapsed_time_s;
 	glm::mat4 R1o = glm::rotate(identityMatrix, _body.orbit.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));		//z-axis
 	
 
@@ -69,9 +72,10 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	glm::mat4 R2o = glm::rotate(identityMatrix, _body.orbit.inclination, glm::vec3(0.0f, 0.0f, 1.0f));
 
 
-    glm::mat4 world = parent_transform * R2o * R1o * To * R2s * R1s * S;
+	glm::mat4 child_transform = parent_transform * R2o * R1o * To * R3s * R2s;
+    //glm::mat4 world = child_transform * R3s * R2s * R1s * S;
+	glm::mat4 world = child_transform * R1s * S;
 	
-	glm::mat4 child_transform = parent_transform * R2o * R1o * To;
 
 	
 	if (show_basis)
@@ -86,6 +90,15 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	// of the node is just the identity matrix and we can forward the whole
 	// world matrix.
 	_body.node.render(view_projection, world);
+
+
+
+	//rings
+	glm::mat4 Sr = glm::scale(identityMatrix, glm::vec3(_ring.scale, 0.f)) ;
+	glm::mat4 Rr = glm::rotate(identityMatrix, 1.57079f, glm::vec3(1.0f, 0.0f, 0.0f));  		//x-axis
+	
+
+	_ring.node.render(view_projection, child_transform * Rr * Sr);
 
 	
 	return child_transform;
