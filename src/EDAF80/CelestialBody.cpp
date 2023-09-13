@@ -43,38 +43,38 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
 	glm::mat4 identityMatrix = glm::mat4(1.0f);
 
 	//scaling
-	glm::mat4 S = glm::scale(identityMatrix, scaleFactorsidentity);
+	glm::mat4 scale = glm::scale(identityMatrix, scaleFactorsidentity);
 
 	
    	//spinning 
 	_body.spin.rotation_angle += _body.spin.speed * elapsed_time_s; 											//[rad] = [rad/s] * [s] 
-	glm::mat4 R1s = glm::rotate(identityMatrix, _body.spin.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));  		//y-axis
+	glm::mat4 spinRotate = glm::rotate(identityMatrix, _body.spin.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));  		//y-axis
 	
 	//world = R1s;
 
 	//tilting
-	glm::mat4 R2s = glm::rotate(identityMatrix, _body.spin.axial_tilt, glm::vec3(0.0f, 0.0f, 1.0f));			//z-axis
+	glm::mat4 spinTilt = glm::rotate(identityMatrix, _body.spin.axial_tilt, glm::vec3(0.0f, 0.0f, 1.0f));			//z-axis
 	
 
 	//spinning[back] 
 	_body.orbit.rotation_angle += _body.orbit.speed * elapsed_time_s;
-	glm::mat4 R3s = glm::rotate(identityMatrix, _body.orbit.rotation_angle, glm::vec3(0.0f, -1.0f, 0.0f));  		//y-axis
+	glm::mat4 spintRotateCompensate = glm::rotate(identityMatrix, _body.orbit.rotation_angle, glm::vec3(0.0f, -1.0f, 0.0f));  		//y-axis
 
 	//translate 
-	glm::mat4 To = glm::translate(identityMatrix, glm::vec3(_body.orbit.radius, 0.0f, 0.0f));					//x-axis
+	glm::mat4 translate = glm::translate(identityMatrix, glm::vec3(_body.orbit.radius, 0.0f, 0.0f));					//x-axis
 
 
 	//rotate orbit 
-	glm::mat4 R1o = glm::rotate(identityMatrix, _body.orbit.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));		//z-axis
+	glm::mat4 orbitRotate = glm::rotate(identityMatrix, _body.orbit.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));		//z-axis
 	
 
 	//tilting orbit 
-	glm::mat4 R2o = glm::rotate(identityMatrix, _body.orbit.inclination, glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 orbitTilt = glm::rotate(identityMatrix, _body.orbit.inclination, glm::vec3(0.0f, 0.0f, 1.0f));
 
 
-	glm::mat4 child_transform = parent_transform * R2o * R1o * To * R3s * R2s;
+	glm::mat4 child_transform = parent_transform * orbitTilt * orbitRotate * translate * spintRotateCompensate * spinTilt;
     //glm::mat4 world = child_transform * R3s * R2s * R1s * S;
-	glm::mat4 world = child_transform * R1s * S;
+	glm::mat4 world = child_transform * spinRotate * scale;
 	
 
 	
