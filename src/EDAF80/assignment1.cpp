@@ -7,14 +7,31 @@
 #include "core/node.hpp"
 #include "core/ShaderProgramManager.hpp"
 
+#include <glm/fwd.hpp>
 #include <glm/gtc/matrix_access.hpp>
 #include <imgui.h>
 
 #include <clocale>
 #include <cstdlib>
-
+#include <functional>
 
 using std::vector;
+struct CelestialBodyRef
+{
+  CelestialBody* body;
+  glm::mat4 parent_transform;
+};
+
+template <typename F>
+void dfs( CelestialBodyRef  body_ref, F func)
+{
+  func(body_ref);
+  
+  for ( auto child: body_ref.body->get_children() ){
+    CelestialBodyRef child_ref = {child, body_ref.body->child_transform};
+    dfs(child_ref, func);
+  }
+}
 
 void dfs_render(CelestialBody* body,
                 std::chrono::microseconds elapsed_time,
@@ -133,7 +150,7 @@ int main()
 	glm::vec3 const moon_scale{ 0.01f };
 	SpinConfiguration const moon_spin{ glm::radians(-6.7f), glm::two_pi<float>() / 1.3f };
 	OrbitConfiguration const moon_orbit{ 0.2f, glm::radians(29.0f), glm::two_pi<float>() / 1.3f };
-    OrbitConfiguration const camera_orbit{ 1.f, glm::radians(29.0f), glm::two_pi<float>() / 500.3f };
+    OrbitConfiguration const camera_orbit{ 0.6f, glm::radians(90.0f), glm::two_pi<float>() / 12.3f };
 
 	glm::vec3 const mars_scale{ 0.03f };
 	SpinConfiguration const mars_spin{ glm::radians(-25.0f), glm::two_pi<float>() / 3.0f };
@@ -260,9 +277,6 @@ int main()
 	sun.add_child(&saturn);
 
 
-
-
-
 	//
 	// Define the colour and depth used for clearing.
 	//
@@ -272,7 +286,6 @@ int main()
 
 
 	auto last_time = std::chrono::high_resolution_clock::now();
-
 
 	bool pause_animation = false;
 	bool show_logs = true;
@@ -288,7 +301,6 @@ int main()
 		auto const delta_time_us = std::chrono::duration_cast<std::chrono::microseconds>(now_time - last_time);
 		auto const animation_delta_time_us = !pause_animation ? std::chrono::duration_cast<std::chrono::microseconds>(delta_time_us * time_scale) : 0us;
 		last_time = now_time;
-
 
 		//
 		// Process inputs
@@ -335,24 +347,42 @@ int main()
 		//
 		// Traverse the scene graph and render all nodes
 		//
-		struct CelestialBodyRef
-		{
-			CelestialBody* body;
-			glm::mat4 parent_transform;
-		};
-		
 
-        dfs_render(&sun, animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), show_basis);
+        auto initial_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        
+        auto transform_func = [animation_delta_time_us] (CelestialBodyRef body_ref)
+        {
+          body_ref.body->transform(animation_delta_time_us, body_ref.parent_transform);
+        };
 
-        auto col = glm::column(cameraObject.world, 3);
-        float camx = cameraObject.world[3][0];
-        float camy = cameraObject.world[3][1];
-        float camz = cameraObject.world[3][2];
-        float lookx = earth.world[3][0];
-        float looky = earth.world[3][1];
-        float lookz = earth.world[3][2];
+        CelestialBodyRef initial_ref = {&sun, initial_transform};
+        dfs(initial_ref, transform_func);
+
+
+        auto cam_t = cameraObject.world_transform;
+        auto look_t = sun.world_transform;
+        float camx = cam_t[3][0];
+        float camy = cam_t[3][1];
+        float camz = cam_t[3][2];
+        float lookx = look_t[3][0];
+        float looky = look_t[3][1];
+        float lookz = look_t[3][2];
         camera.mWorld.SetTranslate(glm::vec3(camx, camy, camz));
         camera.mWorld.LookAt(glm::vec3(lookx,looky,lookz));
+
+
+        glm::mat4 view_projection = camera.GetWorldToClipMatrix();
+        auto rnd_func = [view_projection, show_basis] (CelestialBodyRef body_ref)
+        {
+          body_ref.body->rndr(view_projection, show_basis);
+        };
+        dfs(initial_ref, rnd_func);
+
+        
+        
+        //dfs_render(&sun, animation_delta_time_us, camera.GetWorldToClipMatrix(), initial_transform, show_basis);
+
+       
 
 
         //

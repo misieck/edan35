@@ -50,7 +50,10 @@ public:
 	                 glm::mat4 const& view_projection,
 	                 glm::mat4 const& parent_transform = glm::mat4(1.0f),
 	                 bool show_basis = false);
-
+	glm::mat4 rndr(  glm::mat4 const& view_projection,
+	                 bool show_basis = false);
+    glm::mat4 transform(std::chrono::microseconds elapsed_time,
+                        glm::mat4 const& parent_transform);
 	//! \brief Mark another celestial body as being “attached” to the current one.
 	void add_child(CelestialBody* child);
 
@@ -78,7 +81,8 @@ public:
 	void set_ring(bonobo::mesh_data const& shape, GLuint const* program,
 	              GLuint diffuse_texture_id,
 	              glm::vec2 const& scale = glm::vec2(1.0f));
-  glm::mat4 world;
+  glm::mat4 world_transform;
+  glm::mat4 child_transform;
 private:
 	struct {
 		Node node;
