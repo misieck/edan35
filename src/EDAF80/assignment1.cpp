@@ -23,7 +23,7 @@ struct CelestialBodyRef
 };
 
 template <typename F>
-void dfs( CelestialBodyRef  body_ref, F func)
+void dfs( CelestialBodyRef const&  body_ref, F func)
 {
   func(body_ref);
   
@@ -31,20 +31,6 @@ void dfs( CelestialBodyRef  body_ref, F func)
     CelestialBodyRef child_ref = {child, body_ref.body->child_transform};
     dfs(child_ref, func);
   }
-}
-
-void dfs_render(CelestialBody* body,
-                std::chrono::microseconds elapsed_time,
-                glm::mat4 const& view_projection,
-                glm::mat4 const& parent_transform,
-                bool show_basis)
-{
-  glm::mat4 ctransform = body->render(elapsed_time, view_projection, parent_transform, show_basis);
- 
-  for ( auto child: body->get_children() ){
-    dfs_render(child, elapsed_time,view_projection,ctransform,show_basis);
-  }
-  
 }
 
 int main()
@@ -350,7 +336,7 @@ int main()
 
         auto initial_transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         
-        auto transform_func = [animation_delta_time_us] (CelestialBodyRef body_ref)
+        auto transform_func = [animation_delta_time_us] (CelestialBodyRef const& body_ref)
         {
           body_ref.body->transform(animation_delta_time_us, body_ref.parent_transform);
         };
@@ -360,7 +346,7 @@ int main()
 
 
         auto cam_t = cameraObject.world_transform;
-        auto look_t = sun.world_transform;
+        auto look_t = earth.world_transform;
         float camx = cam_t[3][0];
         float camy = cam_t[3][1];
         float camz = cam_t[3][2];
@@ -372,7 +358,7 @@ int main()
 
 
         glm::mat4 view_projection = camera.GetWorldToClipMatrix();
-        auto rnd_func = [view_projection, show_basis] (CelestialBodyRef body_ref)
+        auto rnd_func = [view_projection, show_basis] (CelestialBodyRef const& body_ref)
         {
           body_ref.body->rndr(view_projection, show_basis);
         };
@@ -380,11 +366,6 @@ int main()
 
         
         
-        //dfs_render(&sun, animation_delta_time_us, camera.GetWorldToClipMatrix(), initial_transform, show_basis);
-
-       
-
-
         //
 		// Add controls to the scene.
 		//
