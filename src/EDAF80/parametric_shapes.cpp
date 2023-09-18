@@ -301,6 +301,36 @@ parametric_shapes::createSphere( const float radius,
 	auto tangents  = std::vector<glm::vec3>(vertices_nb);
 	auto binormals = std::vector<glm::vec3>(vertices_nb);
 
+
+	    int vertex[n_vertex];
+    int triangles[n_triangles][3];
+    
+    for(int i=0; i < n_triangles; i++){
+        triangles[i][0] = 0;
+        triangles[i][1] = 0;
+        triangles[i][2] = 0;
+    }
+    
+    for(int i=0; i < n_meridians - 1; i++){
+        triangles[i][0] = 0;
+        triangles[i][1] = i + 1;
+        triangles[i][2] = i + 2;
+        
+        triangles[n_triangles - i - 1][0] = n_vertex - 1;
+        triangles[n_triangles - i - 1][1] = n_vertex - i - 2;
+        triangles[n_triangles - i - 1][2] = n_vertex - i - 3;
+    }
+    
+    triangles[n_meridians - 1][0] = 0;
+    triangles[n_meridians - 1][1] = n_meridians;
+    triangles[n_meridians - 1][2] = 1;
+    
+    triangles[n_triangles - n_meridians][0] = n_vertex - 1;
+    triangles[n_triangles - n_meridians][1] = n_vertex - 2;
+    triangles[n_triangles - n_meridians][2] = n_vertex - n_meridians - 1;
+
+
+
     
 	float const d_theta = glm::pi<float>() / (static_cast<float>(latitude_split_count));
 	float const d_phi = glm::two_pi<float>() / (static_cast<float>(longitude_split_count));
