@@ -45,12 +45,12 @@ edaf80::Assignment2::run()
 	// Load the sphere geometry
     //auto const shape = parametric_shapes::createQuad(0.25f, 0.15f);
    
-    auto const shape = parametric_shapes::createCircleRing(2.0f, 0.75f, 40u, 4u);
-	if (shape.vao == 0u)
-		return;
+    //auto const shape = parametric_shapes::createCircleRing(2.0f, 0.75f, 40u, 4u);
+	//if (shape.vao == 0u)
+	//	return;
 
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 0.001f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 0.9f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
 
@@ -128,7 +128,7 @@ edaf80::Assignment2::run()
 	bool show_control_points = true;
 
 	auto circle_rings = Node();
-	circle_rings.set_geometry(shape);
+	
 	circle_rings.set_program(&fallback_shader, set_uniforms);
 	TRSTransformf& circle_rings_transform_ref = circle_rings.get_transform();
 
@@ -141,11 +141,11 @@ edaf80::Assignment2::run()
 	glEnable(GL_DEPTH_TEST);
 
 
-	//auto const control_point_sphere = parametric_shapes::createSphere(0.1f, 10u, 10u);
-    //circle_rings.set_geometry(control_point_sphere);
-    // circle_rings.set_program(&fallback_shader, set_uniforms);
-
-
+	auto const control_point_sphere = parametric_shapes::createSphere(0.3f, 10u, 10u);
+    circle_rings.set_geometry(control_point_sphere);
+    circle_rings.set_program(&fallback_shader, set_uniforms);
+    auto shape = control_point_sphere;
+    circle_rings.set_geometry(shape);
     
 	std::array<glm::vec3, 9> control_point_locations = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -158,13 +158,14 @@ edaf80::Assignment2::run()
 		glm::vec3(-2.0f, -1.2f, -2.0f),
 		glm::vec3(-1.0f, -1.8f, -1.0f)
 	};
-	std::array<Node, control_point_locations.size()> control_points;
-	for (std::size_t i = 0; i < control_point_locations.size(); ++i) {
-		auto& control_point = control_points[i];
-		//control_point.set_geometry(control_point_sphere);
-		control_point.set_program(&diffuse_shader, set_uniforms);
-		control_point.get_transform().SetTranslate(control_point_locations[i]);
-	}
+	 std::array<Node, control_point_locations.size()> control_points;
+	 for (std::size_t i = 0; i < control_point_locations.size(); ++i) {
+       break;
+       auto& control_point = control_points[i];
+	 	control_point.set_geometry(control_point_sphere);
+	 	control_point.set_program(&diffuse_shader, set_uniforms);
+	 	control_point.get_transform().SetTranslate(control_point_locations[i]);
+	 }
 
 
 	auto lastTime = std::chrono::high_resolution_clock::now();
