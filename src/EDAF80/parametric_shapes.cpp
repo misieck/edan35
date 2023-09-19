@@ -15,6 +15,9 @@
 #include <vector>
 #include <cmath>
 
+using std::cout;
+using std::endl;
+
 bonobo::mesh_data
 parametric_shapes::createQuad(float const width, float const height,
                               unsigned int const horizontal_split_count,
@@ -330,6 +333,8 @@ parametric_shapes::createSphere( const float radius,
 	float const d_theta = glm::two_pi<float>() / (static_cast<float>(longitude_split_count));
 	float const d_phi = glm::pi<float>() / (static_cast<float>(latitude_split_count));
 
+    float const zero = 0.01f;
+    
 	// generate vertices iteratively
 	size_t index = 0u;
 	float theta = glm::two_pi<float>();
@@ -337,6 +342,10 @@ parametric_shapes::createSphere( const float radius,
     auto const r = radius;
     vertices[0] = glm::vec3(0, r, 0);
     vertices[n_vertex-1] = glm::vec3(0, -r, 0);
+    tangents[0] = glm::vec3(zero, zero, -zero);
+    tangents[n_vertex-1] = glm::vec3(zero, zero, zero);
+    binormals[0] = glm::vec3( zero, zero, -r); //phi = pi, theta = two_pi
+    binormals[n_vertex-1] = glm::vec3( zero, zero, r); //phi = 0; theta = 0;
     
     for (unsigned int i = 0u; i < n_parallels; ++i) {
         phi -= d_phi;
@@ -360,15 +369,17 @@ parametric_shapes::createSphere( const float radius,
 			//                             0.0f);
 
 			// tangent
-			auto const t = glm::vec3( r * cos_theta * sin_phi, 0, -r * sin_theta * sin_phi );
+  			auto const t = glm::vec3( r * cos_theta * sin_phi, 0, -r * sin_theta * sin_phi );
+            //auto const t = glm::vec3(0.2, -0.2, 0.2);
 			tangents[index] = t;
 
 			// binormal
-			auto const b = glm::vec3( r * sin_theta * cos_phi, r * sin_phi, r * cos_theta * cos_phi);
-			binormals[index] = b;
+            auto const b = glm::vec3( r * sin_theta * cos_phi, r * sin_phi, r * cos_theta * cos_phi);
+            //auto const b = glm::vec3(-0.2, 0.2, -0.2);
+            binormals[index] = b;
 
 			// normal
-			auto const n = glm::cross(t, b);
+			auto const n = glm::cross (t, b);
 			normals[index] = n;
             theta -= d_theta;
 			
@@ -398,41 +409,38 @@ parametric_shapes::createSphere( const float radius,
         triangles[i][1] = i + 1;
         triangles[i][0] = i + 2;
         
-        triangles[n_triangles - i - 1][0] = n_vertex - 1;
+        triangles[n_triangles - i - 1][2] = n_vertex - 1;
         triangles[n_triangles - i - 1][1] = n_vertex - i - 2;
-        triangles[n_triangles - i - 1][2] = n_vertex - i - 3;
+        triangles[n_triangles - i - 1][0] = n_vertex - i - 3;
     }
     
-    triangles[n - 1][0] = 0;
+    triangles[n - 1][2] = 0;
     triangles[n - 1][1] = n_meridians;
-    triangles[n - 1][2] = 1;
+    triangles[n - 1][0] = 1;
     
-    triangles[n_triangles - n][2] = n_vertex - 1;
+    triangles[n_triangles - n][0] = n_vertex - 1;
     triangles[n_triangles - n][1] = n_vertex - 2;
-    triangles[n_triangles - n][0] = n_vertex - n - 1;
-
-
-
-
-
-    index = 0u;
+    triangles[n_triangles - n][2] = n_vertex - n - 1;
     
+    index = 0u;
+    unsigned int triangle_index =  n;
 	for (unsigned int i = 1u; i < n_vertex - n - 1; ++i)
 	{
       
-
+      std::cout<<triangle_index<<": ";
       if (i%n == 0){
-        triangles[i+n] = glm::vec3(i, i - n + 1, i+1);
-        triangles[i+n+1] = glm::vec3(i, i + 1, i+n);
+        triangles[triangle_index++] = glm::vec3(i, i - n + 1, i+1);
+        triangles[triangle_index++] = glm::vec3(i, i + 1, i+n);
 
       } else{
-        triangles[i+n] = glm::vec3(i, i + 1, i+n+1);
-        triangles[i+n+1] = glm::vec3(i, i + n + 1, i+n);      
+        triangles[triangle_index++] = glm::vec3(i, i + 1, i+n+1);
+        triangles[triangle_index++] = glm::vec3(i, i + n + 1, i+n);      
       }
-      //std::cout<<triangles[i+n]<<std::endl<<triangles[i+n+1]<<std::endl;      
+      std::cout<<triangles[triangle_index-2]<<std::endl
+               <<triangle_index-1<<": "<<triangles[triangle_index-1]<<std::endl;      
       
 	}
-
+    
 	bonobo::mesh_data data;
 	glGenVertexArrays(1, &data.vao);
 	assert(data.vao != 0u);

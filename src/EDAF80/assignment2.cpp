@@ -141,7 +141,7 @@ edaf80::Assignment2::run()
 	glEnable(GL_DEPTH_TEST);
 
 
-	auto const control_point_sphere = parametric_shapes::createSphere(0.3f, 10u, 10u);
+	auto const control_point_sphere = parametric_shapes::createSphere(0.3f, 8u, 8u);
     circle_rings.set_geometry(control_point_sphere);
     circle_rings.set_program(&fallback_shader, set_uniforms);
     auto shape = control_point_sphere;
