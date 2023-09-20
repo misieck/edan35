@@ -1,17 +1,23 @@
 #include "interpolation.hpp"
 
+#include <iostream>
+#include <glm/gtx/io.hpp>
+
 glm::vec3
 interpolation::evalLERP(glm::vec3 const& p0, glm::vec3 const& p1, float const x)
 {
-    auto X = glm::vec2(1, x);
-    auto tr = glm::mat2(glm::vec2(1, 0),
-                        glm::vec2(-1, 1));
-    
-    auto ret_x = X*tr*glm::vec2(p0.x, p1.x);
-    auto ret_y = X*tr*glm::vec2(p0.y, p1.y);
-    auto ret_z = X*tr*glm::vec2(p0.z, p1.z);
-    
-	return  glm::vec3(ret_x[0], ret_y[0], ret_z[0]);
+    auto X  = glm::vec2(1, x);
+    auto tr = glm::mat2(
+                        glm::vec2( 1,
+                                  -1),
+                                      glm::vec2(0,
+                                                1)
+                       );
+
+    float ret_x = glm::dot(X*tr,glm::vec2(p0.x, p1.x));
+    float ret_y = glm::dot(X*tr,glm::vec2(p0.y, p1.y));
+    float ret_z = glm::dot(X*tr,glm::vec2(p0.z, p1.z));
+    return  glm::vec3(ret_x, ret_y, ret_z);
 }
 
 glm::vec3

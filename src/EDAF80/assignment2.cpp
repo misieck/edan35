@@ -7,6 +7,8 @@
 #include "core/FPSCamera.h"
 #include "core/node.hpp"
 #include "core/ShaderProgramManager.hpp"
+#include <cmath>
+#include <glm/common.hpp>
 #include <imgui.h>
 
 #include <glm/glm.hpp>
@@ -117,7 +119,7 @@ edaf80::Assignment2::run()
 
 	// Set whether the default interpolation algorithm should be the linear one;
 	// it can always be changed at runtime through the "Scene Controls" window.
-	bool use_linear = false;
+	bool use_linear = true;
 
 	// Set whether to interpolate the position of an object or not; it can
 	// always be changed at runtime through the "Scene Controls" window.
@@ -149,8 +151,8 @@ edaf80::Assignment2::run()
     
 	std::array<glm::vec3, 9> control_point_locations = {
 		glm::vec3( 0.0f,  0.0f,  0.0f),
-		glm::vec3( 1.0f,  1.8f,  1.0f),
-		glm::vec3( 2.0f,  1.2f,  2.0f),
+		glm::vec3( 1.0f,  1.0f,  1.0f),
+		glm::vec3( 2.0f,  2.0f,  2.0f),
 		glm::vec3( 3.0f,  3.0f,  3.0f),
 		glm::vec3( 3.0f,  0.0f,  3.0f),
 		glm::vec3(-2.0f, -1.0f,  3.0f),
@@ -220,34 +222,50 @@ edaf80::Assignment2::run()
 		bonobo::changePolygonMode(polygon_mode);
 
 
+        animation_time = elapsed_time_s;
+        unsigned int c_idx = static_cast<unsigned int>(animation_time) % control_point_locations.size();
+
+        auto pos = control_point_locations[c_idx];
 		if (interpolate) {
 			//! \todo Interpolate the movement of a shape between various
 			//!        control points.
 			if (use_linear) {
 				//! \todo Compute the interpolated position
 				//!       using the linear interpolation.
-              auto pos = interpolation::evalLERP(control_point_locations[0], control_point_locations[1],
-												 animation_time);
-				circle_rings.get_transform().SetTranslate(pos);
-              
-              
+
+                  unsigned int c_idx_1 = static_cast<unsigned int>(animation_time+1) % (control_point_locations.size());
+                  
+                  pos = interpolation::evalLERP(control_point_locations[c_idx],
+                                                control_point_locations[c_idx_1],
+												animation_time-std::floor(animation_time));
+                  //std::cout<<"control point "<<control_index<<", "<<pos<<std::endl;
+                                
 			}
 			else {
-				auto pos = interpolation::evalCatmullRom(control_point_locations[0], control_point_locations[1],
-												control_point_locations[2], control_point_locations[3],
-												0.5, animation_time);
-				circle_rings.get_transform().SetTranslate(pos);
-
-			}
+              //unsigned int c_idx = static_cast<unsigned int>(animation_time) % (control_point_locations.size()-3);
+                unsigned int c_idx_1 = static_cast<unsigned int>(animation_time+1) % (control_point_locations.size());
+                unsigned int c_idx_2 = static_cast<unsigned int>(animation_time+2) % (control_point_locations.size());
+                unsigned int c_idx_3 = static_cast<unsigned int>(animation_time+3) % (control_point_locations.size());
+				pos = interpolation::evalCatmullRom(control_point_locations[c_idx],
+                                                    control_point_locations[c_idx_1],
+                                                    control_point_locations[c_idx_2],
+                                                    control_point_locations[c_idx_3],
+                                                    catmull_rom_tension,
+                                                    animation_time-std::floor(animation_time));
+			
+            }
 		}
-		animation_time += elapsed_time_s/10.0f;
-		circle_rings.render(mCamera.GetWorldToClipMatrix());
+        circle_rings.get_transform().SetTranslate(pos);
+        //animation_time = glm::clamp(animation_time, .0f, 1.f);
+		
 		if (show_control_points) {
 			for (auto const& control_point : control_points) {
               	control_point.render(mCamera.GetWorldToClipMatrix());
 			}
 		}
 
+        circle_rings.render(mCamera.GetWorldToClipMatrix());
+        
 		bool const opened = ImGui::Begin("Scene Controls", nullptr, ImGuiWindowFlags_None);
 		if (opened) {
 			auto const cull_mode_changed = bonobo::uiSelectCullMode("Cull mode", cull_mode);
