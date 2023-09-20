@@ -50,7 +50,7 @@ edaf80::Assignment2::run()
 	//	return;
 
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 0.9f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 5.9f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
 
@@ -160,7 +160,6 @@ edaf80::Assignment2::run()
 	};
 	 std::array<Node, control_point_locations.size()> control_points;
 	 for (std::size_t i = 0; i < control_point_locations.size(); ++i) {
-       break;
        auto& control_point = control_points[i];
 	 	control_point.set_geometry(control_point_sphere);
 	 	control_point.set_program(&diffuse_shader, set_uniforms);

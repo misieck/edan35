@@ -333,7 +333,7 @@ parametric_shapes::createSphere( const float radius,
 	float const d_theta = glm::two_pi<float>() / (static_cast<float>(longitude_split_count));
 	float const d_phi = glm::pi<float>() / (static_cast<float>(latitude_split_count));
 
-    float const zero = 0.01f;
+    float const zero = 0.f;
     
 	// generate vertices iteratively
 	size_t index = 0u;
@@ -342,10 +342,13 @@ parametric_shapes::createSphere( const float radius,
     auto const r = radius;
     vertices[0] = glm::vec3(0, r, 0);
     vertices[n_vertex-1] = glm::vec3(0, -r, 0);
-    tangents[0] = glm::vec3(zero, zero, -zero);
-    tangents[n_vertex-1] = glm::vec3(zero, zero, zero);
-    binormals[0] = glm::vec3( zero, zero, -r); //phi = pi, theta = two_pi
-    binormals[n_vertex-1] = glm::vec3( zero, zero, r); //phi = 0; theta = 0;
+    tangents[0] = glm::vec3(zero, zero, zero);
+    tangents[n_vertex-1] = glm::vec3(zero, zero, -zero);
+    binormals[0] = glm::vec3( -zero, zero, -r); //phi = pi, theta = two_pi
+    binormals[n_vertex-1] = glm::vec3( -zero, -zero, r); //phi = 0; theta = 0;
+
+    normals[0] = glm::cross (tangents[0], binormals[0]);
+    normals[n_vertex-1] = glm::cross (tangents[n_vertex-1], binormals[n_vertex-1]);
     
     for (unsigned int i = 0u; i < n_parallels; ++i) {
         phi -= d_phi;
