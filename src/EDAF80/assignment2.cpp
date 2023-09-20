@@ -181,7 +181,7 @@ edaf80::Assignment2::run()
 	float basis_length_scale = 1.0f;
 
 	changeCullMode(cull_mode);
-
+	auto animation_time = .0f;
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
@@ -229,13 +229,14 @@ edaf80::Assignment2::run()
 				//!       using the linear interpolation.
 			}
 			else {
-				//! \todo Compute the interpolated position
-				//!       using the Catmull-Rom interpolation;
-				//!       use the `catmull_rom_tension`
-				//!       variable as your tension argument.
+				auto pos = interpolation::evalCatmullRom(control_point_locations[0], control_point_locations[1],
+												control_point_locations[2], control_point_locations[3],
+												0.5, animation_time);
+				control_points[0].get_transform().SetTranslate(pos);
+        
 			}
 		}
-        
+		animation_time += elapsed_time_s/5.0f;
 		circle_rings.render(mCamera.GetWorldToClipMatrix());
 		if (show_control_points) {
 			for (auto const& control_point : control_points) {
