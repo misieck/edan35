@@ -231,8 +231,8 @@ edaf80::Assignment2::run()
 				auto pos = interpolation::evalCatmullRom(control_point_locations[0], control_point_locations[1],
 												control_point_locations[2], control_point_locations[3],
 												0.5, animation_time);
-				control_points[0].get_transform().SetTranslate(pos);
-        
+				circle_rings.get_transform().SetTranslate(pos);
+
 			}
 		}
 		animation_time += elapsed_time_s/5.0f;
