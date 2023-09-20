@@ -50,7 +50,7 @@ edaf80::Assignment2::run()
 	//	return;
 
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 5.9f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 12.9f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
 
@@ -117,7 +117,7 @@ edaf80::Assignment2::run()
 
 	// Set whether the default interpolation algorithm should be the linear one;
 	// it can always be changed at runtime through the "Scene Controls" window.
-	bool use_linear = true;
+	bool use_linear = false;
 
 	// Set whether to interpolate the position of an object or not; it can
 	// always be changed at runtime through the "Scene Controls" window.
@@ -226,6 +226,11 @@ edaf80::Assignment2::run()
 			if (use_linear) {
 				//! \todo Compute the interpolated position
 				//!       using the linear interpolation.
+              auto pos = interpolation::evalLERP(control_point_locations[0], control_point_locations[1],
+												 animation_time);
+				circle_rings.get_transform().SetTranslate(pos);
+              
+              
 			}
 			else {
 				auto pos = interpolation::evalCatmullRom(control_point_locations[0], control_point_locations[1],
@@ -235,7 +240,7 @@ edaf80::Assignment2::run()
 
 			}
 		}
-		animation_time += elapsed_time_s/5.0f;
+		animation_time += elapsed_time_s/10.0f;
 		circle_rings.render(mCamera.GetWorldToClipMatrix());
 		if (show_control_points) {
 			for (auto const& control_point : control_points) {
