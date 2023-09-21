@@ -291,163 +291,91 @@ parametric_shapes::createCircleRing(float const radius,
 	return data;
 }
 
-static size_t fix_idx(unsigned int idx, size_t n) {
-  auto y = (size_t)glm::ceil(static_cast<float>(idx)/n);
-  
-  unsigned int ret = (idx - 1 -y*n+n)%n +y*n-n+1;
-  printf(" ~%u~(%u->%u) ", (unsigned)y, idx, ret);
-  return ret;
-}
-
-
-static glm::vec3 fix_vec(glm::vec3 vec, size_t n) {
-  printf("(");
-  for (int i = 0; i<vec.length(); ++i)
-  {
-    vec[i] = fix_idx(vec[i], n);
-    printf("%d,",(unsigned) vec[i]);
-  }
-  printf(")\n");
-  return vec;
-}
-
 bonobo::mesh_data
 parametric_shapes::createSphere( const float radius,
                                  const unsigned int longitude_split_count,
                                  const unsigned int latitude_split_count)
 {
-    auto const n_meridians = longitude_split_count;
-    auto const n_parallels = latitude_split_count -1;
-	auto const n_vertex = 2 + n_parallels * (n_meridians) ;
-    auto const n_triangles = (2u * (n_parallels-1) + 2u) * n_meridians;
-
+    auto const n_meridians = longitude_split_count + 1;
+    auto const n_parallels = latitude_split_count  + 1;
+	auto const n_vertex =  n_parallels * n_meridians;
+    auto const n_triangles = (n_meridians-1)*2 + (n_meridians-1)*(n_parallels-3)*2;
+    // (2u * (n_parallels-1) + 2u) * n_meridians;
+    // auto const n_triangles = (n_meridians-1)*2 * ( n_parallels-2);
 	auto vertices  = std::vector<glm::vec3>(n_vertex);
 	auto normals   = std::vector<glm::vec3>(n_vertex);
 	auto texcoords = std::vector<glm::vec3>(n_vertex);
 	auto tangents  = std::vector<glm::vec3>(n_vertex);
 	auto binormals = std::vector<glm::vec3>(n_vertex);
-
-
-   
     
 	float const d_theta = glm::two_pi<float>() / (static_cast<float>(longitude_split_count));
 	float const d_phi = glm::pi<float>() / (static_cast<float>(latitude_split_count));
-
-    float const zero = .0001f;
-    
+        
 	// generate vertices iteratively
 	size_t index = 0u;
 	float theta = glm::two_pi<float>();
     float phi = glm::pi<float>();
     auto const r = radius;
     
-    vertices[0] = glm::vec3(0, r, 0);
-    vertices[n_vertex-1] = glm::vec3(0, -r, 0);
-
-    tangents[0] = glm::vec3(0, 0, -r);
-    tangents[n_vertex-1] = glm::vec3(0, 0, -r);
-
-    binormals[0] = glm::vec3( -r, 0, 0); //phi = pi, theta = two_pi
-    binormals[n_vertex-1] = glm::vec3( r, 0, 0); //phi = 0; theta = 0
-
-    normals[0] = glm::cross (tangents[0], binormals[0]);
-    normals[n_vertex-1] = glm::cross (tangents[n_vertex-1], binormals[n_vertex-1]);
-    
-    for (unsigned int i = 0u; i < n_parallels; ++i) {
-        phi -= d_phi;
-        
+    for (unsigned int i = 0; i < n_parallels; ++i) {
+                
         float const cos_phi = std::cos(phi);
 		float const sin_phi = std::sin(phi);
-        
+        theta = glm::two_pi<float>();
+
         for (unsigned int j = 0u; j < n_meridians; ++j) {
+
             float const cos_theta = std::cos(theta);
             float const sin_theta = std::sin(theta);
 
             // vertex
-
-            vertices[++index] = glm::vec3( r * sin_theta * sin_phi,
+            vertices[index] = glm::vec3( r * sin_theta * sin_phi ,
                                            -r * cos_phi,
-                                           r * cos_theta * sin_phi);
-
+                                           r * cos_theta * sin_phi );
+            
             //texture coordinates
 			texcoords[index] = glm::vec3(static_cast<float>(j) / (static_cast<float>(n_meridians)),
 			                             static_cast<float>(i) / (static_cast<float>(n_parallels)),
 			                             0.0f);
 
 			// tangent
-  			auto const t = glm::vec3( r * cos_theta * sin_phi, 0, -r * sin_theta * sin_phi );
-            //auto const t = glm::vec3(0.2, -0.2, 0.2);
-			tangents[index] = t;
+  			auto const t = glm::vec3( r * cos_theta, 0, -r * sin_theta );
+            tangents[index] = t;
 
 			// binormal
             auto const b = glm::vec3( r * sin_theta * cos_phi, r * sin_phi, r * cos_theta * cos_phi);
-            //auto const b = glm::vec3(-0.2, 0.2, -0.2);
             binormals[index] = b;
 
 			// normal
 			auto const n = glm::cross (t, b);
 			normals[index] = n;
             theta -= d_theta;
-			
+            index++;
 		}
-        //        texcoords.push_back(glm::vec3(static_cast<float>(i) / (static_cast<float>(n_parallels)), 1, 0));
-		
+        
+		phi -= d_phi;
+
 	}
 
-    
-
+  
 	// create index array
 	auto triangles = std::vector<glm::uvec3>( n_triangles );
 
-	// generate indices iteratively
-
-    for(int i=0; i < n_triangles; i++){
-        triangles[i][0] = 0;
-        triangles[i][1] = 0;
-        triangles[i][2] = 0;
-    }
-
-
-
-
     size_t n = n_meridians;
-    
+    unsigned int bv;
     for(int i=0; i < n - 1; i++){
-        triangles[i][2] = 0;
-        triangles[i][1] = i + 1;
-        triangles[i][0] = i + 2;
-        
-        triangles[n_triangles - i - 1][2] = n_vertex - 1;
-        triangles[n_triangles - i - 1][1] = n_vertex - i - 2;
-        triangles[n_triangles - i - 1][0] = n_vertex - i - 3;
+        triangles[i] = glm::vec3(i, i+n, i+n+1);
+        bv = i + (n*(n_parallels-2));
+        triangles[n_triangles-n+1+i] = glm::vec3(bv, bv+n, bv+1);
     }
     
-    triangles[n - 1][2] = 0;
-    triangles[n - 1][1] = n_meridians;
-    triangles[n - 1][0] = 1;
-    
-    triangles[n_triangles - n][0] = n_vertex - 1;
-    triangles[n_triangles - n][1] = n_vertex - 2;
-    triangles[n_triangles - n][2] = n_vertex - n - 1;
-    
-    index = 0u;
-    unsigned int triangle_index =  n;
-	for (unsigned int i = 1u; i < n_vertex - n - 1; ++i)
+    unsigned int triangle_index =  n - 1;
+	for (unsigned int i = n; i < n_vertex - 2*n; ++i)
 	{
-      
-      std::cout<<triangle_index<<": ";
-      if (i%n == 0){
-        triangles[triangle_index++] = glm::vec3(i, i - n + 1, i+1);
-        triangles[triangle_index++] = glm::vec3(i, i + 1, i+n);
-
-      } else{
-        triangles[triangle_index++] = glm::vec3(i, i + 1, i+n+1);
-        triangles[triangle_index++] = glm::vec3(i, i + n + 1, i+n);      
-      }
-      std::cout<<triangles[triangle_index-2]<<std::endl
-               <<triangle_index-1<<": "<<triangles[triangle_index-1]<<std::endl;      
-      
-	}
+        if ((i+1)%n == 0 ) continue;
+        triangles[triangle_index++] = glm::vec3(i, i + n + 1, i+1);
+        triangles[triangle_index++] = glm::vec3(i, i + n, i+n+1);
+    }
     
 	bonobo::mesh_data data;
 	glGenVertexArrays(1, &data.vao);
