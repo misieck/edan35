@@ -143,10 +143,11 @@ edaf80::Assignment2::run()
 	glEnable(GL_DEPTH_TEST);
 
 
-	auto const control_point_sphere = parametric_shapes::createSphere(0.3f, 8u, 8u);
+	auto const control_point_sphere = parametric_shapes::createSphere(0.25f, 8u, 8u);
+    auto const sphere = parametric_shapes::createSphere(0.65f, 12u, 12u);
     circle_rings.set_geometry(control_point_sphere);
     circle_rings.set_program(&fallback_shader, set_uniforms);
-    auto shape = control_point_sphere;
+    auto shape = sphere;
     circle_rings.set_geometry(shape);
     
 	std::array<glm::vec3, 9> control_point_locations = {
@@ -182,12 +183,13 @@ edaf80::Assignment2::run()
 	float basis_length_scale = 1.0f;
 
 	changeCullMode(cull_mode);
-	auto animation_time = .0f;
+	auto anim_time = .0f;
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
 		lastTime = nowTime;
 
+        
 		auto& io = ImGui::GetIO();
 		inputHandler.SetUICapture(io.WantCaptureMouse, io.WantCaptureKeyboard);
 
@@ -222,10 +224,10 @@ edaf80::Assignment2::run()
 		bonobo::changePolygonMode(polygon_mode);
 
 
-        animation_time = elapsed_time_s;
-        unsigned int c_idx = static_cast<unsigned int>(animation_time) % control_point_locations.size();
-
+        anim_time = elapsed_time_s;
+        unsigned int c_idx = static_cast<unsigned int>(anim_time) % control_point_locations.size();
         auto pos = control_point_locations[c_idx];
+        
 		if (interpolate) {
 			//! \todo Interpolate the movement of a shape between various
 			//!        control points.
@@ -233,30 +235,29 @@ edaf80::Assignment2::run()
 				//! \todo Compute the interpolated position
 				//!       using the linear interpolation.
 
-                  unsigned int c_idx_1 = static_cast<unsigned int>(animation_time+1) % (control_point_locations.size());
+                  unsigned int c_idx_1 = static_cast<unsigned int>(anim_time+1) % (control_point_locations.size());
                   
                   pos = interpolation::evalLERP(control_point_locations[c_idx],
                                                 control_point_locations[c_idx_1],
-												animation_time-std::floor(animation_time));
-                  //std::cout<<"control point "<<control_index<<", "<<pos<<std::endl;
+												anim_time-std::floor(anim_time));
+                  
                                 
 			}
 			else {
-              //unsigned int c_idx = static_cast<unsigned int>(animation_time) % (control_point_locations.size()-3);
-                unsigned int c_idx_1 = static_cast<unsigned int>(animation_time+1) % (control_point_locations.size());
-                unsigned int c_idx_2 = static_cast<unsigned int>(animation_time+2) % (control_point_locations.size());
-                unsigned int c_idx_3 = static_cast<unsigned int>(animation_time+3) % (control_point_locations.size());
+                unsigned int c_idx_1 = static_cast<unsigned int>(anim_time+1) % (control_point_locations.size());
+                unsigned int c_idx_2 = static_cast<unsigned int>(anim_time+2) % (control_point_locations.size());
+                unsigned int c_idx_3 = static_cast<unsigned int>(anim_time+3) % (control_point_locations.size());
 				pos = interpolation::evalCatmullRom(control_point_locations[c_idx],
                                                     control_point_locations[c_idx_1],
                                                     control_point_locations[c_idx_2],
                                                     control_point_locations[c_idx_3],
                                                     catmull_rom_tension,
-                                                    animation_time-std::floor(animation_time));
+                                                    anim_time-std::floor(anim_time));
 			
             }
 		}
         circle_rings.get_transform().SetTranslate(pos);
-        //animation_time = glm::clamp(animation_time, .0f, 1.f);
+        
 		
 		if (show_control_points) {
 			for (auto const& control_point : control_points) {

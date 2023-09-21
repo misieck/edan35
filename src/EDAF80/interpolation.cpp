@@ -25,15 +25,22 @@ interpolation::evalCatmullRom(glm::vec3 const& p0, glm::vec3 const& p1,
                               glm::vec3 const& p2, glm::vec3 const& p3,
                               float const t, float const x)
 {
+
+
+   
+
+  
 	glm::vec3 result;
 
 	glm::vec4 x_vector(1, x, x*x, x*x*x);
 
+    
 	glm::vec4 tau_col1(0.0f, -t, 2*t, -t);
 	glm::vec4 tau_col2(1.0f, 0, t-3.0, 2.0-t);
 	glm::vec4 tau_col3(0.0f, t, 3.0-2.0*t, t-2.0);
 	glm::vec4 tau_col4(0.0f, 0.0f, -t, t);
-
+    auto tau = glm::mat4(tau_col1, tau_col2, tau_col3, tau_col4);
+    
 	/*
 	glm::vec4 tau_row1(0.0f, 1.0f, 0.0f, 0.0f);
 	glm::vec4 tau_row2(-t, 0.0, t, 0.0);
@@ -51,7 +58,11 @@ interpolation::evalCatmullRom(glm::vec3 const& p0, glm::vec3 const& p1,
 
 	result.z = p0.z * glm::dot(x_vector, tau_col1) + p1.z * glm::dot(x_vector, tau_col2) + 
 				p2.z * glm::dot(x_vector, tau_col3) + p3.z * glm::dot(x_vector, tau_col4);
-	
-
-	return result;
+	/*
+    return  glm::vec3( glm::dot(x_vector*tau, glm::vec4(p0.x, p1.x, p2.x, p3.x) ),
+                       glm::dot(x_vector*tau, glm::vec4(p0.y, p1.y, p2.y, p3.y) ),
+                       glm::dot(x_vector*tau, glm::vec4(p0.z, p1.z, p2.z, p3.z) )
+                      );
+    */
+    return result;
 }

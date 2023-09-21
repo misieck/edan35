@@ -318,7 +318,7 @@ parametric_shapes::createSphere( const float radius,
 {
     auto const n_meridians = longitude_split_count;
     auto const n_parallels = latitude_split_count -1;
-	auto const n_vertex = 2 + n_parallels * n_meridians ;
+	auto const n_vertex = 2 + n_parallels * (n_meridians) ;
     auto const n_triangles = (2u * (n_parallels-1) + 2u) * n_meridians;
 
 	auto vertices  = std::vector<glm::vec3>(n_vertex);
@@ -333,19 +333,22 @@ parametric_shapes::createSphere( const float radius,
 	float const d_theta = glm::two_pi<float>() / (static_cast<float>(longitude_split_count));
 	float const d_phi = glm::pi<float>() / (static_cast<float>(latitude_split_count));
 
-    float const zero = 0.f;
+    float const zero = .0001f;
     
 	// generate vertices iteratively
 	size_t index = 0u;
 	float theta = glm::two_pi<float>();
     float phi = glm::pi<float>();
     auto const r = radius;
+    
     vertices[0] = glm::vec3(0, r, 0);
     vertices[n_vertex-1] = glm::vec3(0, -r, 0);
-    tangents[0] = glm::vec3(zero, zero, zero);
-    tangents[n_vertex-1] = glm::vec3(zero, zero, -zero);
-    binormals[0] = glm::vec3( -zero, zero, -r); //phi = pi, theta = two_pi
-    binormals[n_vertex-1] = glm::vec3( -zero, -zero, r); //phi = 0; theta = 0;
+
+    tangents[0] = glm::vec3(0, 0, -r);
+    tangents[n_vertex-1] = glm::vec3(0, 0, -r);
+
+    binormals[0] = glm::vec3( -r, 0, 0); //phi = pi, theta = two_pi
+    binormals[n_vertex-1] = glm::vec3( r, 0, 0); //phi = 0; theta = 0
 
     normals[0] = glm::cross (tangents[0], binormals[0]);
     normals[n_vertex-1] = glm::cross (tangents[n_vertex-1], binormals[n_vertex-1]);
@@ -366,10 +369,10 @@ parametric_shapes::createSphere( const float radius,
                                            -r * cos_phi,
                                            r * cos_theta * sin_phi);
 
-			// texture coordinates
-			//texcoords[index] = glm::vec3(static_cast<float>(j) / (static_cast<float>(spread_slice_vertices_count)),
-			//                             static_cast<float>(i) / (static_cast<float>(circle_slice_vertices_count)),
-			//                             0.0f);
+            //texture coordinates
+			texcoords[index] = glm::vec3(static_cast<float>(j) / (static_cast<float>(n_meridians)),
+			                             static_cast<float>(i) / (static_cast<float>(n_parallels)),
+			                             0.0f);
 
 			// tangent
   			auto const t = glm::vec3( r * cos_theta * sin_phi, 0, -r * sin_theta * sin_phi );
@@ -387,9 +390,11 @@ parametric_shapes::createSphere( const float radius,
             theta -= d_theta;
 			
 		}
-
+        //        texcoords.push_back(glm::vec3(static_cast<float>(i) / (static_cast<float>(n_parallels)), 1, 0));
 		
 	}
+
+    
 
 	// create index array
 	auto triangles = std::vector<glm::uvec3>( n_triangles );
