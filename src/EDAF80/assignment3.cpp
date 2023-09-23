@@ -1,4 +1,5 @@
 #include "assignment3.hpp"
+#include "core/helpers.hpp"
 #include "interpolation.hpp"
 #include "parametric_shapes.hpp"
 
@@ -49,7 +50,18 @@ edaf80::Assignment3::run()
 
 	// Create the shader programs
 	ShaderProgramManager program_manager;
-	GLuint fallback_shader = 0u;
+
+    GLuint skybox_shader = 0u;
+	program_manager.CreateAndRegisterProgram("Fallback",
+	                                         { { ShaderType::vertex, "EDAF80/skybox.vert" },
+	                                           { ShaderType::fragment, "EDAF80/skybox.frag" } },
+	                                         skybox_shader);
+	if (skybox_shader == 0u) {
+		LogError("Failed to load fallback shader");
+		return;
+	}
+    
+    GLuint fallback_shader = 0u;
 	program_manager.CreateAndRegisterProgram("Fallback",
 	                                         { { ShaderType::vertex, "common/fallback.vert" },
 	                                           { ShaderType::fragment, "common/fallback.frag" } },
@@ -97,6 +109,16 @@ edaf80::Assignment3::run()
 	};
 
 
+    GLuint cubemap = bonobo::loadTextureCubeMap(config::resources_path("cubemaps/NissiBeach2/posx.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/negx.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/posy.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/negy.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/posz.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/negz.jpg")
+                                                );
+    GLuint textureDamnIt = bonobo::loadTexture2D(config::resources_path("cubemaps/NissiBeach2/posx.jpg"));
+    
+
 	//
 	// Set up the two spheres used.
 	//
@@ -105,11 +127,13 @@ edaf80::Assignment3::run()
 		LogError("Failed to retrieve the mesh for the skybox");
 		return;
 	}
-
+    
 	Node skybox;
 	skybox.set_geometry(skybox_shape);
-	skybox.set_program(&fallback_shader, set_uniforms);
-
+	skybox.set_program(&skybox_shader, set_uniforms);
+    skybox.add_texture("cubemap", cubemap, GL_TEXTURE_CUBE_MAP);
+    skybox.add_texture("texturedamnit", textureDamnIt, GL_TEXTURE_2D);
+    
     //	auto demo_shape = parametric_shapes::createQuad(0.4f, 0.4f, 2u, 2u);
     auto demo_shape = parametric_shapes::createSphere(1.5f, 20u, 20u);
     if (demo_shape.vao == 0u) {

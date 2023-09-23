@@ -151,6 +151,7 @@ bonobo::loadObjects(std::string const& filename)
 		material_data& constants = material_constants[i];
 		auto const material = assimp_scene->mMaterials[i];
 
+        
 		auto const process_texture = [&bindings,&material,i,&parent_folder,&texture_count](aiTextureType type, std::string const& type_as_str, std::string const& name){
 			if (material->GetTextureCount(type)) {
 				auto const texture_start_time = std::chrono::high_resolution_clock::now();
@@ -411,7 +412,7 @@ bonobo::loadTextureCubeMap(std::string const& posx, std::string const& negx,
 	// and `glGenBuffers()` that were used in assignment 2,
 	// `glGenTextures()` can create `n` texture objects at once. Here we
 	// only one texture object that will contain our whole cube map.
-	glGenTextures(1, /*! \todo fill me */nullptr);
+	glGenTextures(1, &texture);
 	assert(texture != 0u);
 
 	// Similarly to vertex arrays and buffers, we first need to bind the
@@ -464,6 +465,64 @@ bonobo::loadTextureCubeMap(std::string const& posx, std::string const& negx,
 
 	//! \todo repeat now the texture filling for the 5 remaining faces
 
+	data = getTextureData(negy, width, height, false);
+	if (data.empty()) {
+		glDeleteTextures(1, &texture);
+		return 0u;
+	}
+
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height),
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid const*>(data.data()));
+
+
+
+    data = getTextureData(negz, width, height, false);
+	if (data.empty()) {
+		glDeleteTextures(1, &texture);
+		return 0u;
+	}
+
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+                 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height),
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid const*>(data.data()));
+
+
+
+    data = getTextureData(posx, width, height, false);
+	if (data.empty()) {
+		glDeleteTextures(1, &texture);
+		return 0u;
+	}
+
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+                 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height),
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid const*>(data.data()));
+
+    
+	data = getTextureData(posy, width, height, false);
+	if (data.empty()) {
+		glDeleteTextures(1, &texture);
+		return 0u;
+	}
+
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+                 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height),
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid const*>(data.data()));
+
+    
+	data = getTextureData(posz, width, height, false);
+	if (data.empty()) {
+		glDeleteTextures(1, &texture);
+		return 0u;
+	}
+
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+                 0, GL_RGBA, static_cast<GLsizei>(width), static_cast<GLsizei>(height),
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid const*>(data.data()));
+
+
+    
 	if (generate_mipmap)
 		// Generate the mipmap hierarchy; wait for EDAN35 to understand
 		// what it does
