@@ -108,7 +108,7 @@ edaf80::Assignment3::run()
 		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
 	};
 
-
+    
     GLuint cubemap = bonobo::loadTextureCubeMap(config::resources_path("cubemaps/NissiBeach2/posx.jpg"),
                                                 config::resources_path("cubemaps/NissiBeach2/negx.jpg"),
                                                 config::resources_path("cubemaps/NissiBeach2/posy.jpg"),
@@ -116,13 +116,14 @@ edaf80::Assignment3::run()
                                                 config::resources_path("cubemaps/NissiBeach2/posz.jpg"),
                                                 config::resources_path("cubemaps/NissiBeach2/negz.jpg")
                                                 );
-    GLuint textureDamnIt = bonobo::loadTexture2D(config::resources_path("cubemaps/NissiBeach2/posx.jpg"));
+    GLuint demoTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_rough_2k.jpg"));
+    GLuint demoNormalTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_nor_2k.jpg"));
     
 
 	//
 	// Set up the two spheres used.
 	//
-	auto skybox_shape = parametric_shapes::createSphere(20.0f, 100u, 100u);
+	auto skybox_shape = parametric_shapes::createSphere(800.0f, 4u, 3u);
 	if (skybox_shape.vao == 0u) {
 		LogError("Failed to retrieve the mesh for the skybox");
 		return;
@@ -132,7 +133,9 @@ edaf80::Assignment3::run()
 	skybox.set_geometry(skybox_shape);
 	skybox.set_program(&skybox_shader, set_uniforms);
     skybox.add_texture("cubemap", cubemap, GL_TEXTURE_CUBE_MAP);
-    skybox.add_texture("texturedamnit", textureDamnIt, GL_TEXTURE_2D);
+    skybox.add_texture("demoTex", demoTex, GL_TEXTURE_2D);
+    skybox.add_texture("demoNormalTex", demoNormalTex, GL_TEXTURE_2D);
+
     
     //	auto demo_shape = parametric_shapes::createQuad(0.4f, 0.4f, 2u, 2u);
     auto demo_shape = parametric_shapes::createSphere(1.5f, 20u, 20u);
@@ -188,7 +191,7 @@ edaf80::Assignment3::run()
 			mCamera.mWorld.LookAt(glm::vec3(0.0f));
 		}
 		camera_position = mCamera.mWorld.GetTranslation();
-
+        skybox.get_transform().SetTranslate( camera_position);
 		if (inputHandler.GetKeycodeState(GLFW_KEY_R) & JUST_PRESSED) {
 			shader_reload_failed = !program_manager.ReloadAllPrograms();
 			if (shader_reload_failed)
