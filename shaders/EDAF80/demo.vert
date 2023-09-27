@@ -12,6 +12,8 @@
 layout (location = 0) in vec3 vertex;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec3 texcoord;
+layout (location = 3) in vec3 tangent;
+layout (location = 4) in vec3 binormal;
 
 uniform mat4 vertex_model_to_world;
 uniform mat4 normal_model_to_world;
@@ -28,19 +30,32 @@ uniform mat4 vertex_world_to_clip;
 //} vs_out;
 out VS_OUT{
     vec3 tex_coord;
+    vec3 vertex;
     vec3 normal;
+    mat3 TBN;
+    mat3 TBNp;
 } vs_out;
 
 void main()
 {
-  	vs_out.normal = normalize(vec3(normal_model_to_world * vec4(normal, 0.0)));
+    vs_out.TBNp = mat3(tangent, binormal, normal);
+    
+    vs_out.TBN = mat3(vec3(normal_model_to_world * vec4(tangent, 0.0)),
+                      vec3(normal_model_to_world * vec4(binormal, 0.0)),
+                      vec3(normal_model_to_world * vec4(normal, 0.0))
+                     );
+    /*vs_out.TBN = mat3(vec3(vec4(tangent, 0.0  )* -1.0 ),
+                      vec3(vec4(binormal, 0.0 ) * -1.0),
+                      vec3(vec4(normal, 0.0   ) )
+                     );
+*/
+    //mat2 rot90 = mat2(vec2(0,1), vec2(1, 0));
+    vs_out.tex_coord = vec3(texcoord.xy, 0);
+    vs_out.vertex = vec3(vertex_model_to_world * vec4(vertex, 1.0));
+    vs_out.normal = vec3(normal_model_to_world * vec4(normal, 0.0));
 
 	gl_Position = vertex_world_to_clip * vertex_model_to_world * vec4(vertex, 1.0);
-    vs_out.tex_coord = texcoord;
-//	vs_out.vertex = vec3(vertex_model_to_world * vec4(vertex, 1.0));
-//	vs_out.normal = vec3(normal_model_to_world * vec4(normal, 0.0));
 
-//	gl_Position = vertex_world_to_clip * vertex_model_to_world * vec4(vertex, 1.0);
 }
 
 

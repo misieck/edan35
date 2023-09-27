@@ -52,14 +52,26 @@ edaf80::Assignment3::run()
 	ShaderProgramManager program_manager;
 
     GLuint skybox_shader = 0u;
-	program_manager.CreateAndRegisterProgram("Fallback",
+	program_manager.CreateAndRegisterProgram("skybox",
 	                                         { { ShaderType::vertex, "EDAF80/skybox.vert" },
 	                                           { ShaderType::fragment, "EDAF80/skybox.frag" } },
 	                                         skybox_shader);
 	if (skybox_shader == 0u) {
-		LogError("Failed to load fallback shader");
+		LogError("Failed to load skybox shader");
 		return;
 	}
+
+    GLuint demo_shader = 0u;
+	program_manager.CreateAndRegisterProgram("ass3",
+	                                         { { ShaderType::vertex, "EDAF80/demo.vert" },
+	                                           { ShaderType::fragment, "EDAF80/demo.frag" } },
+	                                         demo_shader);
+	if (demo_shader == 0u) {
+		LogError("Failed to load ass3 shader");
+		return;
+	}
+   
+
     
     GLuint fallback_shader = 0u;
 	program_manager.CreateAndRegisterProgram("Fallback",
@@ -87,6 +99,21 @@ edaf80::Assignment3::run()
 	if (normal_shader == 0u)
 		LogError("Failed to load normal shader");
 
+    GLuint tangent_shader = 0u;
+	program_manager.CreateAndRegisterProgram("Tangent",
+	                                         { { ShaderType::vertex, "EDAF80/tangent.vert" },
+	                                           { ShaderType::fragment, "EDAF80/tangent.frag" } },
+	                                         tangent_shader);
+	if (tangent_shader == 0u)
+		LogError("Failed to load tangent shader");
+GLuint bitangent_shader = 0u;
+	program_manager.CreateAndRegisterProgram("BiTangent",
+	                                         { { ShaderType::vertex, "EDAF80/binormal.vert" },
+	                                           { ShaderType::fragment, "EDAF80/binormal.frag" } },
+	                                         bitangent_shader);
+	if (bitangent_shader == 0u)
+		LogError("Failed to load tangent shader");
+
 	GLuint texcoord_shader = 0u;
 	program_manager.CreateAndRegisterProgram("Texture coords",
 	                                         { { ShaderType::vertex, "EDAF80/texcoord.vert" },
@@ -109,17 +136,22 @@ edaf80::Assignment3::run()
 	};
 
     
-    GLuint cubemap = bonobo::loadTextureCubeMap(config::resources_path("cubemaps/NissiBeach2/posx.jpg"),
-                                                config::resources_path("cubemaps/NissiBeach2/negx.jpg"),
-                                                config::resources_path("cubemaps/NissiBeach2/posy.jpg"),
-                                                config::resources_path("cubemaps/NissiBeach2/negy.jpg"),
-                                                config::resources_path("cubemaps/NissiBeach2/posz.jpg"),
-                                                config::resources_path("cubemaps/NissiBeach2/negz.jpg")
+    GLuint cubemap = bonobo::loadTextureCubeMap(config::resources_path("cubemaps/Teide/posx.jpg"),
+                                                config::resources_path("cubemaps/Teide/negx.jpg"),
+                                                config::resources_path("cubemaps/Teide/posy.jpg"),
+                                                config::resources_path("cubemaps/Teide/negy.jpg"),
+                                                config::resources_path("cubemaps/Teide/posz.jpg"),
+                                                config::resources_path("cubemaps/Teide/negz.jpg")
                                                 );
-    GLuint demoTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_rough_2k.jpg"));
-    GLuint demoNormalTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_nor_2k.jpg"));
     
+    GLuint demoSpecTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_rough_2k.jpg"));
+    GLuint demoDiffTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_diff_2k.jpg"));
+    GLuint demoNormalTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_nor_2k.jpg"));
 
+    //GLuint demoSpecTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_rough_2k.jpg"));
+    //GLuint demoDiffTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_coll1_2k.jpg"));
+    //GLuint demoNormalTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_nor_2k.jpg"));
+   
 	//
 	// Set up the two spheres used.
 	//
@@ -133,10 +165,7 @@ edaf80::Assignment3::run()
 	skybox.set_geometry(skybox_shape);
 	skybox.set_program(&skybox_shader, set_uniforms);
     skybox.add_texture("cubemap", cubemap, GL_TEXTURE_CUBE_MAP);
-    skybox.add_texture("demoTex", demoTex, GL_TEXTURE_2D);
-    skybox.add_texture("demoNormalTex", demoNormalTex, GL_TEXTURE_2D);
-
-    
+        
     //	auto demo_shape = parametric_shapes::createQuad(0.4f, 0.4f, 2u, 2u);
     auto demo_shape = parametric_shapes::createSphere(1.5f, 20u, 20u);
     if (demo_shape.vao == 0u) {
@@ -151,9 +180,14 @@ edaf80::Assignment3::run()
 	demo_material.shininess = 10.0f;
 
 	Node demo_sphere;
-	demo_sphere.set_geometry(demo_shape);
+    demo_sphere.add_texture("demoSpecTex", demoSpecTex, GL_TEXTURE_2D);
+    demo_sphere.add_texture("demoDiffTex", demoDiffTex, GL_TEXTURE_2D);
+    demo_sphere.add_texture("demoNormalTex", demoNormalTex, GL_TEXTURE_2D);
+    demo_sphere.set_geometry(demo_shape);
 	demo_sphere.set_material_constants(demo_material);
-	demo_sphere.set_program(&fallback_shader, phong_set_uniforms);
+	demo_sphere.set_program(&demo_shader, phong_set_uniforms);
+
+
 
 
 	glClearDepthf(1.0f);

@@ -334,16 +334,16 @@ parametric_shapes::createSphere( const float radius,
                                            r * cos_theta * sin_phi );
             
             //texture coordinates
-			texcoords[index] = glm::vec3(static_cast<float>(j) / (static_cast<float>(n_meridians)),
-			                             static_cast<float>(i) / (static_cast<float>(n_parallels)),
+			texcoords[index] = glm::vec3(static_cast<float>(n_meridians-j) / (static_cast<float>(n_meridians)),
+			                             static_cast<float>(n_parallels-i) / (static_cast<float>(n_parallels)),
 			                             0.0f);
 
 			// tangent
-  			auto const t = glm::vec3( r * cos_theta, 0, -r * sin_theta );
+  			auto const t = glm::vec3( cos_theta, 0, -sin_theta );
             tangents[index] = t;
 
 			// binormal
-            auto const b = glm::vec3( r * sin_theta * cos_phi, r * sin_phi, r * cos_theta * cos_phi);
+            auto const b = glm::vec3( sin_theta * cos_phi,  sin_phi,  cos_theta * cos_phi);
             binormals[index] = b;
 
 			// normal

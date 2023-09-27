@@ -3,7 +3,7 @@
 uniform vec3 light_position;
 
 in VS_OUT {
-	vec3 vertex;
+  vec3 vertex;
 	vec3 normal;
 } fs_in;
 
