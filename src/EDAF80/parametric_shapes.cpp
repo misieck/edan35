@@ -51,7 +51,7 @@ parametric_shapes::createQuad(float const width, float const height,
 	for (unsigned int i = 0; i < n_vertex - n -n; ++i)
 	{
         if ( (i+1) % n == 0 ) continue;
-        triangles[triangle_index++] = glm::vec3(i+1, i - 1, i + n);
+        triangles[triangle_index++] = glm::vec3(i+1, i, i + n);
         triangles[triangle_index++] = glm::vec3(i+1, i + n, i + n + 1);
     }
 
