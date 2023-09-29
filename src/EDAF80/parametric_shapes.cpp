@@ -23,26 +23,41 @@ parametric_shapes::createQuad(float const width, float const height,
                               unsigned int const horizontal_split_count,
                               unsigned int const vertical_split_count)
 {
-	auto const vertices = std::array<glm::vec3, 4>{
-		glm::vec3(0.0f,  0.0f,   0.0f),
-		glm::vec3(width, 0.0f,   0.0f),
-		glm::vec3(width, height, 0.0f),
-		glm::vec3(0.0f,  height, 0.0f)
-	};
-
-	auto const index_sets = std::array<glm::uvec3, 2>{
-		glm::uvec3(0u, 1u, 2u),
-		glm::uvec3(0u, 2u, 3u)
-	};
-
+  
 	bonobo::mesh_data data;
 
-	if (horizontal_split_count > 0u || vertical_split_count > 0u)
-	{
-		LogError("parametric_shapes::createQuad() does not support tesselation.");
-		return data;
+    auto n_meridians = vertical_split_count +1;
+    auto n_parallels = horizontal_split_count + 1;
+    auto n_vertex = n_meridians * n_parallels;
+    auto n_triangles = horizontal_split_count * vertical_split_count *2;
+    
+    std::vector<glm::vec3> vertices(n_vertex);
+    std::vector<glm::uvec3> triangles(n_triangles);
+
+    auto d_width = width / horizontal_split_count;
+    auto d_height = height / vertical_split_count;
+    
+    for (unsigned int i = 0; i < n_parallels; ++i) {
+                
+        for (unsigned int j = 0u; j < n_meridians; ++j) {
+          vertices[i*n_parallels + j] = glm::vec3( j  * d_width, 0, i * d_height);
+		}
+
 	}
 
+        // create index array
+    unsigned int triangle_index =  0;
+    auto n = n_meridians;
+	for (unsigned int i = 0; i < n_vertex - n -n; ++i)
+	{
+        if ( (i+1) % n == 0 ) continue;
+        triangles[triangle_index++] = glm::vec3(i+1, i - 1, i + n);
+        triangles[triangle_index++] = glm::vec3(i+1, i + n, i + n + 1);
+    }
+
+
+    
+    
 	//
 	// NOTE:
 	//
@@ -124,12 +139,12 @@ parametric_shapes::createQuad(float const width, float const height,
 	// elements, aka. indices!
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ibo);
 
-    size_t ibo_size = index_sets.size() *  sizeof( decltype(index_sets)::value_type );
+    size_t ibo_size = triangles.size() *  sizeof( decltype(triangles)::value_type );
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibo_size,
-	             /* where is the data stored on the CPU? */index_sets.data(),
+	             /* where is the data stored on the CPU? */triangles.data(),
 	             /* inform OpenGL that the data is modified once, but used often */GL_STATIC_DRAW);
 
-	data.indices_nb = index_sets.size() * decltype(index_sets)::value_type::length();
+	data.indices_nb = triangles.size() * decltype(triangles)::value_type::length();
 
 	// All the data has been recorded, we can unbind them.
 	glBindVertexArray(0u);

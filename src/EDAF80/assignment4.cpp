@@ -69,6 +69,13 @@ edaf80::Assignment4::run()
 	// Todo: Load your geometry
 	//
 
+    auto quad_shape = parametric_shapes::createQuad(100.f,100.f, 1000u, 1000u);
+	Node the_sea;
+    the_sea.set_geometry(quad_shape);
+    the_sea.set_program(&fallback_shader);
+
+
+    
 	glClearDepthf(1.0f);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
@@ -150,6 +157,7 @@ edaf80::Assignment4::run()
 			//
 			// Todo: Render all your geometry here.
 			//
+          the_sea.render(mCamera.GetWorldToClipMatrix());
 		}
 
 
