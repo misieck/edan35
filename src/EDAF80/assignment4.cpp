@@ -53,10 +53,14 @@ edaf80::Assignment4::run()
 	                                         { { ShaderType::vertex, "common/fallback.vert" },
 	                                           { ShaderType::fragment, "common/fallback.frag" } },
 	                                         fallback_shader);
+
 	if (fallback_shader == 0u) {
 		LogError("Failed to load fallback shader");
 		return;
 	}
+
+		
+	GLint elapsedTimeLoc = glGetUniformLocation(ocean_shader, "elapsed_time_s");
 
 	//
 	// Todo: Insert the creation of other shader programs.
@@ -145,7 +149,8 @@ edaf80::Assignment4::run()
 		//
 		// Todo: If you need to handle inputs, you can do it here
 		//
-
+		glUniform1f(elapsedTimeLoc, elapsed_time_s);
+		
 
 		mWindowManager.NewImGuiFrame();
 
