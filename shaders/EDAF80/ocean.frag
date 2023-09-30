@@ -1,6 +1,7 @@
 #version 410
 
 uniform vec3 camera_position;
+uniform samplerCube skybox;
 
 in VS_OUT {
     vec3 vertex;
@@ -28,6 +29,6 @@ void main()
     //still need to be checked (Done by Resende)
     //vec3 R = clamp(normalize(reflect(-V, fs_in.normal)), 0.0, 1.0);
     vec3 R = normalize(reflect(-V, fs_in.normal));
-    frag_color.xyz += R;
+    frag_color += texture(skybox, R);
     //////////////////////////
 }

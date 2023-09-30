@@ -136,6 +136,7 @@ edaf80::Assignment4::run()
 	Node the_sea;
     the_sea.set_geometry(quad_shape);
     the_sea.set_program(&ocean_shader, ocean_set_uniforms);
+    the_sea.add_texture("cubemap", cubemap, GL_TEXTURE_CUBE_MAP);
 
 
     
