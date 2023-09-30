@@ -25,9 +25,9 @@ void main()
 //    frag_color = vec4((fs_in.normal+1.0)/2.0, 1); 
 
 
-    //still need to be checked
+    //still need to be checked (Done by Resende)
     //vec3 R = clamp(normalize(reflect(-V, fs_in.normal)), 0.0, 1.0);
-    vec3 R = normalize(reflect(-V, fs_in.normal);
+    vec3 R = normalize(reflect(-V, fs_in.normal));
     frag_color.xyz += R;
     //////////////////////////
 }
