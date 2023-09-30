@@ -69,9 +69,49 @@ edaf80::Assignment4::run()
 		LogError("Failed to load ocean shader");
 		return;
 	}
-		
+
+
+	//////////////////////////skybox////////////////////////////////////
+
+	GLuint skybox_shader = 0u;
+	program_manager.CreateAndRegisterProgram("skybox",
+	                                         { { ShaderType::vertex, "EDAF80/skybox.vert" },
+	                                           { ShaderType::fragment, "EDAF80/skybox.frag" } },
+	                                         skybox_shader);
+	if (skybox_shader == 0u) {
+		LogError("Failed to load skybox shader");
+		return;
+	}
+
 	
+	auto light_position = glm::vec3(-40.0f, 4.0f, 2.0f);
+	auto const set_uniforms = [&light_position](GLuint program){
+		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
+	};
+
+	GLuint cubemap = bonobo::loadTextureCubeMap(config::resources_path("cubemaps/Teide/posx.jpg"),
+                                                config::resources_path("cubemaps/Teide/negx.jpg"),
+                                                config::resources_path("cubemaps/Teide/posy.jpg"),
+                                                config::resources_path("cubemaps/Teide/negy.jpg"),
+                                                config::resources_path("cubemaps/Teide/posz.jpg"),
+                                                config::resources_path("cubemaps/Teide/negz.jpg")
+                                                );
+
+
+	auto skybox_shape = parametric_shapes::createSphere(800.0f, 4u, 3u);
+	if (skybox_shape.vao == 0u) {
+		LogError("Failed to retrieve the mesh for the skybox");
+		return;
+	}
     
+	Node skybox;
+	skybox.set_geometry(skybox_shape);
+	skybox.set_program(&skybox_shader);
+    skybox.add_texture("cubemap", cubemap, GL_TEXTURE_CUBE_MAP);
+	
+    //////////////////////////skybox////////////////////////////////////
+
+	
 	//
 	// Todo: Insert the creation of other shader programs.
 	//       (Check how it was done in assignment 3.)
@@ -178,7 +218,7 @@ edaf80::Assignment4::run()
 
 		if (!shader_reload_failed) {
 			//
-			// Todo: Render all your geometry here.
+		  skybox.render(mCamera.GetWorldToClipMatrix());
 			//
           the_sea.render(mCamera.GetWorldToClipMatrix());
 		}
