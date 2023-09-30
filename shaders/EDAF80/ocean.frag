@@ -13,5 +13,5 @@ void main()
 {
     vec3 light_position = vec3(0.5, 3.0, -0.6);
 	vec3 L = normalize(light_position - fs_in.vertex);
-	frag_color = vec4(1.0) * clamp(dot(normalize(fs_in.normal), L), 0.0, 1.0);
+	frag_color = vec4(1.0) *clamp(dot(normalize(fs_in.normal), L), 0.0, 1.0);
 }

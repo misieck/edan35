@@ -59,9 +59,19 @@ edaf80::Assignment4::run()
 		return;
 	}
 
-		
-	GLint elapsedTimeLoc = glGetUniformLocation(ocean_shader, "elapsed_time_s");
+    GLuint ocean_shader = 0u;
+	program_manager.CreateAndRegisterProgram("Ocean",
+	                                         { { ShaderType::vertex, "EDAF80/ocean.vert" },
+	                                           { ShaderType::fragment, "EDAF80/ocean.frag" } },
+	                                         ocean_shader);
 
+	if (ocean_shader == 0u) {
+		LogError("Failed to load ocean shader");
+		return;
+	}
+		
+	
+    
 	//
 	// Todo: Insert the creation of other shader programs.
 	//       (Check how it was done in assignment 3.)
@@ -73,10 +83,19 @@ edaf80::Assignment4::run()
 	// Todo: Load your geometry
 	//
 
+	auto const ocean_set_uniforms = [&elapsed_time_s,&camera_position](GLuint program){
+        glUniform1f(glGetUniformLocation(program, "elapsed_time_s"), elapsed_time_s);
+        glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
+         //		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
+        
+	};
+
+
+    
     auto quad_shape = parametric_shapes::createQuad(100.f,100.f, 100u, 100u);
 	Node the_sea;
     the_sea.set_geometry(quad_shape);
-    the_sea.set_program(&fallback_shader);
+    the_sea.set_program(&ocean_shader, ocean_set_uniforms);
 
 
     
@@ -149,7 +168,6 @@ edaf80::Assignment4::run()
 		//
 		// Todo: If you need to handle inputs, you can do it here
 		//
-		glUniform1f(elapsedTimeLoc, elapsed_time_s);
 		
 
 		mWindowManager.NewImGuiFrame();

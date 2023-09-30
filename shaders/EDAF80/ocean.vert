@@ -30,14 +30,14 @@ out VS_OUT {
 vec3 wave(vec2 pos, vec2 vel, float amp, float freq, float phase, float sharp, float time, out vec3 T, out vec3 B, out vec3 N)
 {
    float sin_p = sin((pos.x * vel.x + pos.y * vel.y) * freq + phase * time) * 0.5 + 0.5;
-   float cos_p = cos((pos.x * vel.x + pos.y * vel.y) * freq + phase * time)
+   float cos_p = cos((pos.x * vel.x + pos.y * vel.y) * freq + phase * time);
    float g = amp * pow(sin_p, sharp);
    float dg_dx = 0.5 * freq * sharp * pow(sin_p, sharp-1) * cos_p * pos.x;
-   float dg_dy = 0.5 * freq * sharp * pow(sin_p, sharp-1) * cos_p * pos.y;
-   T = vec3(0,1,dg_dy);
-   B = vec3(1,0,dg_dx);
-   N = vec3(-dg_dx, -dg_dy, 1);
-   return vec3(0,0,g);
+   float dg_dz = 0.5 * freq * sharp * pow(sin_p, sharp-1) * cos_p * pos.y;
+   T = vec3(0,dg_dz,1);
+   B = vec3(1,dg_dx,0);
+   N = vec3(-dg_dx, 1, -dg_dz);
+   return vec3(0,g,0);
    
 
 }
@@ -53,11 +53,12 @@ void main()
     vec3 T;
     vec3 B;
     vec3 N;
-	vs_out.vertex = wave(vertex.xy, dir.xy, amp[0], freq[0], phase[0], sharp[0], elapsed_time_s, T, B, N);
+    vec3 v =  vertex + wave(vertex.xz, dir.xy, amp[0], freq[0], phase[0], sharp[0], elapsed_time_s, T, B, N);
+	vs_out.vertex = vec3(vertex_model_to_world * vec4(v, 1.0));
     
-	vs_out.normal = vec3(normal_model_to_world * vec4(normal, 0.0));
+	vs_out.normal = vec3(normal_model_to_world * vec4(N, 0.0));
 
-	gl_Position = vertex_world_to_clip * vertex_model_to_world * vec4(vertex, 1.0);
+	gl_Position = vertex_world_to_clip * vertex_model_to_world * vec4(v, 1.0);
 }
 
 
