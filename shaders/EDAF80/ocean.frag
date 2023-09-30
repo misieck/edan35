@@ -22,5 +22,7 @@ void main()
     float facing_factor = 1 - max(dot(V,fs_in.normal), 0);
 	frag_color = mix(water_deep, water_shallow, facing_factor);
 //    frag_color = vec4(1.0) *clamp(dot(normalize(fs_in.normal), L), 0.0, 1.0);
-//    frag_color = vec4((fs_in.normal+1.0)/2.0, 1); 
+   // frag_color = vec4((fs_in.normal+1.0)/2.0, 1);
+   // frag_color = vec4(facing_factor * vec3(1), 1);
+    
 }

@@ -64,7 +64,7 @@ void main()
 
 	vs_out.vertex = vec3(vertex_model_to_world * vec4(v, 1.0));
     
-	vs_out.normal = vec3(normal_model_to_world * vec4(N, 0.0));
+	vs_out.normal = normalize(vec3(normal_model_to_world * vec4(N, 0.0)));
 
 	gl_Position = vertex_world_to_clip * vertex_model_to_world * vec4(v, 1.0);
 }
