@@ -97,7 +97,8 @@ edaf80::Assignment4::run()
                                                 config::resources_path("cubemaps/Teide/negz.jpg")
                                                 );
 
-
+    GLuint wavesNormal = bonobo::loadTexture2D(config::resources_path("textures/waves.png") );
+    
 	auto skybox_shape = parametric_shapes::createSphere(800.0f, 4u, 3u);
 	if (skybox_shape.vao == 0u) {
 		LogError("Failed to retrieve the mesh for the skybox");
@@ -118,26 +119,40 @@ edaf80::Assignment4::run()
 	//
 
 	float elapsed_time_s = 0.0f;
-
+    float size = 100;
+    bool use_normal_mapping = true;
+    bool use_refractions = true;
+    bool show_fresnel = false;
+    
 	//
 	// Todo: Load your geometry
 	//
 
-	auto const ocean_set_uniforms = [&elapsed_time_s,&camera_position](GLuint program){
+	auto const ocean_set_uniforms =
+      [&elapsed_time_s,
+       &camera_position,
+       &size,
+       &use_normal_mapping,
+       &use_refractions, &show_fresnel] (GLuint program)
+    {
         glUniform1f(glGetUniformLocation(program, "elapsed_time_s"), elapsed_time_s);
+        glUniform1f(glGetUniformLocation(program, "size"), size);
         glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
+        glUniform1i(glGetUniformLocation(program, "use_normal_mapping"), use_normal_mapping?1:0);
+        glUniform1i(glGetUniformLocation(program, "use_refractions"), use_refractions?1:0);
+        glUniform1i(glGetUniformLocation(program, "show_fresnel"), show_fresnel?1:0);
          //		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
         
 	};
 
 
     
-    auto quad_shape = parametric_shapes::createQuad(100.f,100.f, 100u, 100u);
+    auto quad_shape = parametric_shapes::createQuad(size,size, 100u, 100u);
 	Node the_sea;
     the_sea.set_geometry(quad_shape);
     the_sea.set_program(&ocean_shader, ocean_set_uniforms);
     the_sea.add_texture("cubemap", cubemap, GL_TEXTURE_CUBE_MAP);
-
+    the_sea.add_texture("wavesNormal", wavesNormal, GL_TEXTURE_2D);
 
     
 	glClearDepthf(1.0f);
@@ -146,7 +161,7 @@ edaf80::Assignment4::run()
 
 
 	auto lastTime = std::chrono::high_resolution_clock::now();
-
+    
 	bool pause_animation = true;
 	bool use_orbit_camera = false;
 	auto cull_mode = bonobo::cull_mode_t::disabled;
@@ -237,6 +252,9 @@ edaf80::Assignment4::run()
 		if (opened) {
 			ImGui::Checkbox("Pause animation", &pause_animation);
 			ImGui::Checkbox("Use orbit camera", &use_orbit_camera);
+            ImGui::Checkbox("Use normal mapping", &use_normal_mapping);
+            ImGui::Checkbox("Use refractions", &use_refractions);
+            ImGui::Checkbox("Show fresnel", &show_fresnel);
 			ImGui::Separator();
 			auto const cull_mode_changed = bonobo::uiSelectCullMode("Cull mode", cull_mode);
 			if (cull_mode_changed) {

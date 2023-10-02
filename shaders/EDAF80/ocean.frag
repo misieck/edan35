@@ -1,34 +1,77 @@
 #version 410
 
+uniform mat4 normal_model_to_world;
 uniform vec3 camera_position;
 uniform samplerCube skybox;
+uniform sampler2D wavesNormal;
+uniform int use_normal_mapping;
+uniform int use_refractions;
+uniform int show_fresnel;
 
 in VS_OUT {
     vec3 vertex;
 	vec3 normal;
+    mat4x2 normalWavesCoord;
+    mat3 TBN;
+    
 } fs_in;
 
 out vec4 frag_color;
 
-
 const vec4 water_deep = vec4(0.0, 0.0, 0.1, 1.0);
 const vec4 water_shallow = vec4(0.0, 0.5, 0.5, 1.0);
+const float n1 = 1.0;
+const float n2 = 1.3;
+// this is tangent space
+vec3 bumpWave()
+{
+    vec3 ret = vec3(0);
+    for (int i = 0; i<3; ++i)
+    {
+        ret += texture(wavesNormal, fs_in.normalWavesCoord[i]).rgb * 2.0 - 1.0;
+    }
+    return normalize(ret);
+}
+
 
 
 void main()
 {
+    float R0 = pow((n1-n2)/(n1+n2), 2);
+    float eta = n1/n2;
+    //R0 = 0.02037;
+  
+    vec3 bumpN = fs_in.TBN * bumpWave();
+    vec3 N = normalize(fs_in.normal);
+    if (use_normal_mapping == 1)
+    {
+        N = normalize(normal_model_to_world * vec4(bumpN,1)).xyz; 
+    }
+          
     vec3 light_position = vec3(0.7, 13.0, -0.6);
 	vec3 L = normalize(light_position - fs_in.vertex);
     vec3 V = normalize(camera_position - fs_in.vertex);
-    float facing_factor = 1 - max(dot(V,fs_in.normal), 0);
+
+
+    float facing_factor = 1.0 - max(dot(V,N), 0.0);
 	frag_color = mix(water_deep, water_shallow, facing_factor);
-//    frag_color = vec4(1.0) *clamp(dot(normalize(fs_in.normal), L), 0.0, 1.0);
-//    frag_color = vec4((fs_in.normal+1.0)/2.0, 1); 
+
+    float fresnel =1.0;
+    if (use_refractions == 1){
+      fresnel = R0 + (1.0 - R0) * pow( facing_factor, 5);
+    }
+    
+    vec3 reflection = normalize(reflect(-V, N));
+    vec3 refraction = normalize(refract(-V, N, eta));
+    frag_color =  (frag_color + fresnel*texture(skybox, reflection) + (1-fresnel)*texture(skybox, refraction));
 
 
-    //still need to be checked (Done by Resende)
-    //vec3 R = clamp(normalize(reflect(-V, fs_in.normal)), 0.0, 1.0);
-    vec3 R = normalize(reflect(-V, fs_in.normal));
-    frag_color += texture(skybox, R);
-    //////////////////////////
+
+    // frag_color = vec4( normalize( vec3( (dot(V,N)+1)/2  ) ) ,1 );
+   // vec3 D = (fs_in.TBN[2]);
+    if (show_fresnel == 1){
+      vec3 D = vec3(fresnel);
+    //D = vec3(dot(V,N));
+      frag_color = vec4(   (D)   , 1.0 );
+    }
 }
