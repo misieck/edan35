@@ -89,12 +89,12 @@ edaf80::Assignment4::run()
 		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
 	};
 
-	GLuint cubemap = bonobo::loadTextureCubeMap(config::resources_path("cubemaps/Teide/posx.jpg"),
-                                                config::resources_path("cubemaps/Teide/negx.jpg"),
-                                                config::resources_path("cubemaps/Teide/posy.jpg"),
-                                                config::resources_path("cubemaps/Teide/negy.jpg"),
-                                                config::resources_path("cubemaps/Teide/posz.jpg"),
-                                                config::resources_path("cubemaps/Teide/negz.jpg")
+	GLuint cubemap = bonobo::loadTextureCubeMap(config::resources_path("cubemaps/NissiBeach2/posx.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/negx.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/posy.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/negy.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/posz.jpg"),
+                                                config::resources_path("cubemaps/NissiBeach2/negz.jpg")
                                                 );
 
     GLuint wavesNormal = bonobo::loadTexture2D(config::resources_path("textures/waves.png") );
