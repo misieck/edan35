@@ -150,7 +150,7 @@ edaf80::Assignment4::run()
 
 
     
-    auto quad_shape = parametric_shapes::createQuad(size,size, 500u, 500u);
+    auto quad_shape = parametric_shapes::createQuad(size,size, 1000u, 1000u);
 	Node the_sea;
     the_sea.set_geometry(quad_shape);
     the_sea.set_program(&ocean_shader, ocean_set_uniforms);

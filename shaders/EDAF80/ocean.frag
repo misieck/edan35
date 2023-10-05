@@ -11,6 +11,7 @@ uniform int show_only_color;
 
 in VS_OUT {
     vec3 vertex;
+    vec3 V;
 	vec3 normal;
     mat4x2 normalWavesCoord;
     mat3 TBN;
@@ -22,8 +23,8 @@ out vec4 frag_color;
 
 const vec4 water_deep = vec4(0.0, 0.0, 0.1, 1.0);
 const vec4 water_shallow = vec4(0.0, 0.5, 0.5, 1.0);
-const float n1 = 1.0;
-const float n2 = 1.333;
+float n1 = 1.0;
+float n2 = 1.333;
 // this is tangent space
 vec3 bumpWave()
 {
@@ -41,21 +42,27 @@ vec3 bumpWave()
 
 void main()
 {
-    float R0 = pow((n1-n2)/(n1+n2), 2);
-    float eta = n1/n2;
-    //R0 = 0.02037;
   
+    
+    //R0 = 0.02037;
+//    mat3 TBN_normalized = 
     vec3 bumpN = (fs_in.TBN * bumpWave());
     vec3 N = normalize(fs_in.normal);
     if (use_normal_mapping == 1)
     {
         N = (normal_model_to_world * vec4(bumpN, 1 )).xyz;
-        //N = normalize(N);
     }
-          
-    //vec3 light_position = vec3(1, 13.0, 1);
-	//vec3 L = normalize(light_position - fs_in.vertex);
-    vec3 V = normalize(camera_position - fs_in.vertex);
+    if (!gl_FrontFacing) // Quad seems to be upside down
+    {
+        N = -N;
+        float nTmp = n2;
+        n2 = n1;
+        n1 = nTmp;
+    }
+    
+    float R0 = pow((n1-n2)/(n1+n2), 2);
+    float eta = n1/n2;
+    vec3 V = fs_in.V; // normalize(camera_position - fs_in.vertex);
 
 
     float facing_factor = 1.0 - max(dot(V,N), 0.0);
@@ -64,7 +71,7 @@ void main()
     if (show_only_color == 1) return;
     float fresnel = 1.0;
     if (use_refractions == 1){
-      fresnel = R0 + (1.0 - R0) * pow( facing_factor, 5);
+      fresnel = R0 + (1.0 - R0) * pow( 1-dot(V,N), 5.0);
     }
     
     vec3 reflection = normalize(reflect(-V, N));

@@ -11,6 +11,7 @@
 // buffer.
 layout (location = 0) in vec3 vertex;
 uniform sampler2D wavesNormal;
+uniform vec3 camera_position;
 uniform mat4 vertex_model_to_world;
 uniform mat4 normal_model_to_world;
 uniform mat4 vertex_world_to_clip;
@@ -24,6 +25,7 @@ uniform float size;
 // shaders/EDAF80/diffuse.frag.
 out VS_OUT {
 	vec3 vertex;
+    vec3 V;
 	vec3 normal;
     mat4x2 normalWavesCoord;
     mat3 TBN;
@@ -38,10 +40,10 @@ mat4x2 getNormalWavesCoord(float time)
 
   vec2 texScale = vec2(8, 4);
   float normalTime = mod(time, 100.0);
-  vec2 normalSpeed = vec2(-0.05, 0.02);
+  vec2 normalSpeed = vec2(-0.05, 0.00);
   vec2 texCoord = vertex.xz / size;
   mat4x2 ret = mat4x2(0);
-  const ivec4 scale_mults = ivec4(1, 2, 4, 7);
+  const ivec4 scale_mults = 1*ivec4(1, 2, 4, 7);
   const ivec4 speed_mults = ivec4(1, 4, 8, 12);
   vec3 col = vec3(0);
   for (int i = 0; i<4; ++i)
@@ -73,7 +75,7 @@ vec3 wave(vec2 pos, vec2 vel, float amp, float freq, float phase, float sharp, f
 
 void main()
 {
-    vec2 amp = vec2(1.0, 0.5) ;
+    vec2 amp = vec2(1.0, 1.0) ;
     vec2 freq = vec2(0.2, 0.4);
     vec2 phase = vec2(0.5, 1.3);
     vec2 sharp = vec2(6.0, 2.0);
@@ -89,11 +91,13 @@ void main()
     vec3 N = vec3(-dg_dx, 1, -dg_dz);
     vs_out.TBN = mat3(normalize(T),normalize(B),normalize(N));
 
-	vs_out.vertex = vec3(vertex_model_to_world * vec4(v, 1.0));
-	vs_out.normal = normalize( (normal_model_to_world * vec4(N, 0.0)).xyz );
+    v = vec3(vertex_model_to_world * vec4(v, 1.0));
+	vs_out.vertex = v;
+    vs_out.V = normalize(camera_position - v);
+    vs_out.normal = normalize( (normal_model_to_world * vec4(N, 0.0)).xyz );
     vs_out.normalWavesCoord = getNormalWavesCoord(elapsed_time_s);
 
-	gl_Position = vertex_world_to_clip * vertex_model_to_world * vec4(v, 1.0);
+	gl_Position = vertex_world_to_clip  * vec4(v, 1.0);
 }
 
 
