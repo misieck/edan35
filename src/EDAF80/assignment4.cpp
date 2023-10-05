@@ -43,7 +43,8 @@ edaf80::Assignment4::run()
 	mCamera.mWorld.SetTranslate(glm::vec3(-40.0f, 14.0f, 6.0f));
 	mCamera.mWorld.LookAt(glm::vec3(0.0f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
-	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
+	mCamera.mMovementSpeed = glm::vec3(5.0f); // 3 m/s => 10.8 km/h
+    mCamera.SetFov(0.9f * glm::half_pi<float>());
 	auto camera_position = mCamera.mWorld.GetTranslation();
 
 	// Create the shader programs
@@ -99,7 +100,7 @@ edaf80::Assignment4::run()
 
     GLuint wavesNormal = bonobo::loadTexture2D(config::resources_path("textures/waves.png") );
     
-	auto skybox_shape = parametric_shapes::createSphere(800.0f, 4u, 3u);
+	auto skybox_shape = parametric_shapes::createSphere(800.0f, 8u, 8u);
 	if (skybox_shape.vao == 0u) {
 		LogError("Failed to retrieve the mesh for the skybox");
 		return;
@@ -123,6 +124,7 @@ edaf80::Assignment4::run()
     bool use_normal_mapping = true;
     bool use_refractions = true;
     bool show_fresnel = false;
+    bool show_only_color = false;
     
 	//
 	// Todo: Load your geometry
@@ -133,7 +135,7 @@ edaf80::Assignment4::run()
        &camera_position,
        &size,
        &use_normal_mapping,
-       &use_refractions, &show_fresnel] (GLuint program)
+       &use_refractions, &show_fresnel, &show_only_color] (GLuint program)
     {
         glUniform1f(glGetUniformLocation(program, "elapsed_time_s"), elapsed_time_s);
         glUniform1f(glGetUniformLocation(program, "size"), size);
@@ -141,13 +143,14 @@ edaf80::Assignment4::run()
         glUniform1i(glGetUniformLocation(program, "use_normal_mapping"), use_normal_mapping?1:0);
         glUniform1i(glGetUniformLocation(program, "use_refractions"), use_refractions?1:0);
         glUniform1i(glGetUniformLocation(program, "show_fresnel"), show_fresnel?1:0);
+        glUniform1i(glGetUniformLocation(program, "show_only_color"), show_only_color?1:0);
          //		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
         
 	};
 
 
     
-    auto quad_shape = parametric_shapes::createQuad(size,size, 100u, 100u);
+    auto quad_shape = parametric_shapes::createQuad(size,size, 500u, 500u);
 	Node the_sea;
     the_sea.set_geometry(quad_shape);
     the_sea.set_program(&ocean_shader, ocean_set_uniforms);
@@ -255,6 +258,7 @@ edaf80::Assignment4::run()
             ImGui::Checkbox("Use normal mapping", &use_normal_mapping);
             ImGui::Checkbox("Use refractions", &use_refractions);
             ImGui::Checkbox("Show fresnel", &show_fresnel);
+            ImGui::Checkbox("Show only color", &show_only_color);
 			ImGui::Separator();
 			auto const cull_mode_changed = bonobo::uiSelectCullMode("Cull mode", cull_mode);
 			if (cull_mode_changed) {
