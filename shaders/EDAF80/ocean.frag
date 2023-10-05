@@ -21,7 +21,7 @@ out vec4 frag_color;
 const vec4 water_deep = vec4(0.0, 0.0, 0.1, 1.0);
 const vec4 water_shallow = vec4(0.0, 0.5, 0.5, 1.0);
 const float n1 = 1.0;
-const float n2 = 1.3;
+const float n2 = 1.333;
 // this is tangent space
 vec3 bumpWave()
 {

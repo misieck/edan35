@@ -54,9 +54,9 @@ mat4x2 getNormalWavesCoord(float time)
   vec2 normalSpeed = vec2(-0.05, 0.0);
   vec2 texCoord = vertex.xz / size;
   mat4x2 ret = mat4x2(0);
-  const ivec4 scale_mults = ivec4(1, 2, 4, 5);
-  const ivec4 speed_mults = ivec4(1, 3, 7, 9);
-  for (int i = 0; i<3; ++i)
+  const ivec4 scale_mults = ivec4(1, 2, 4, 7);
+  const ivec4 speed_mults = ivec4(1, 4, 8, 12);
+  for (int i = 0; i<4; ++i)
   {
     
     ret[i].xy = (texCoord.xy * texScale   * scale_mults[i] +
@@ -70,7 +70,7 @@ mat4x2 getNormalWavesCoord(float time)
 
 void main()
 {
-    vec2 amp = vec2(2.0, 0.5) ;
+    vec2 amp = vec2(1.0, 0.5) ;
     vec2 freq = vec2(0.2, 0.4);
     vec2 phase = vec2(0.5, 1.3);
     vec2 sharp = vec2(2.0, 2.0);
@@ -78,7 +78,7 @@ void main()
     vec3 T = vec3(0.0);
     vec3 B = vec3(0.0);
     vec3 N = vec3(0.0);
-    vec3 w1 = 0.1+wave(vertex.xz, dir.xy, amp[0], freq[0], phase[0], sharp[0], elapsed_time_s, T, B, N);
+    vec3 w1 = wave(vertex.xz, dir.xy, amp[0], freq[0], phase[0], sharp[0], elapsed_time_s, T, B, N);
     vec3 w2 = wave(vertex.xz, dir.zw, amp[1], freq[1], phase[1], sharp[1], elapsed_time_s, T, B, N); 
     vec3 v =  vertex + w1 + w2;
 
