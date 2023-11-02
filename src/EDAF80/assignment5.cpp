@@ -11,6 +11,15 @@
 
 #include <clocale>
 #include <stdexcept>
+#include <vector>
+#include "core/node.hpp"
+#include "asteroid.hpp"
+
+bool  collision(const asteroid& a, const asteroid& b){
+    return false;
+}
+  
+
 
 edaf80::Assignment5::Assignment5(WindowManager& windowManager) :
 	mCamera(0.5f * glm::half_pi<float>(),
@@ -52,8 +61,15 @@ edaf80::Assignment5::run()
 		LogError("Failed to load fallback shader");
 		return;
 	}
+    
+    std::vector<asteroid> asteroids;
+    const unsigned int N = 10;
+    for (int i = 0; i<N; i++){
+      asteroids.push_back(asteroid( {1,1+N,1}, 1.f+ static_cast<float>(N)/10));
+    }
+        
 
-	//
+    //
 	// Todo: Insert the creation of other shader programs.
 	//       (Check how it was done in assignment 3.)
 	//
@@ -127,7 +143,11 @@ edaf80::Assignment5::run()
 
 
 		if (!shader_reload_failed) {
-			//
+            for (int i = 0; i<N; i++){
+                asteroids[i].node.render(mCamera.GetWorldToClipMatrix());
+            }
+    
+          //
 			// Todo: Render all your geometry here.
 			//
 		}
