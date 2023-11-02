@@ -17,12 +17,14 @@
 #define max_velocity_norm 3
 
 
+
 asteroid::asteroid(glm::vec3 pos, float radius, glm::vec3 vel){
   this->node = Node();
   this->mesh = parametric_shapes::createSphere(radius, RES, RES);
   this->node.set_geometry(this->mesh);
   this->pos = pos;
   this->vel = vel;
+  this->radius = radius;
 }
 
 asteroid generate_asteroid(){
@@ -31,6 +33,11 @@ asteroid generate_asteroid(){
                    generate_asteroid_radius(),
                    generate_asteroid_velocity(pos)
                   );
+}
+
+void asteroid::collision(){
+  auto small_ball = parametric_shapes::createSphere(0.1, 4, 4);
+  node.set_geometry(small_ball);
 }
 
 
@@ -72,4 +79,15 @@ glm::vec3 generate_asteroid_velocity(const glm::vec3& position){
 
 
     return glm::normalize(velocity) * velocity_norm; 
+}
+
+
+bool test_collision(const asteroid& a, const asteroid& b ){
+  glm::vec3 d = a.pos - b.pos;
+  float squared_distance = glm::dot(d,d);
+
+  float squaredRadii = (a.radius+b.radius) * (a.radius+b.radius);
+
+  return squared_distance<=squaredRadii;
+  
 }

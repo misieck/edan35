@@ -23,9 +23,10 @@ struct asteroid {
   glm::vec3 vel;
   glm::vec3 acc;
   float radius;
-  asteroid(glm::vec3 pos, float r, glm::vec3 vel);
+  asteroid(glm::vec3 pos, float r, glm::vec3 vel); 
   void update_pos(float dt){pos = pos + vel*dt; node.get_transform().SetTranslate(pos);};
   void update_vel(float dt){vel = vel + acc*dt;};
+  void collision();
 private:
   bonobo::mesh_data mesh;
 };
@@ -35,5 +36,6 @@ asteroid generate_asteroid();
 glm::vec3 generate_asteroid_position();
 glm::vec3 generate_asteroid_velocity(const glm::vec3& );
 float generate_asteroid_radius();
+bool test_collision(const asteroid& a, const asteroid& b );
 
 

@@ -112,6 +112,16 @@ edaf80::Assignment5::run()
         for (int i = 0; i<N; i++){
             asteroids[i].update_pos(deltaTime);
         }
+
+        for (int i = 0; i<N-1; i++){
+            for (int j = i + 1; j<N; j++){
+                auto collision = test_collision(asteroids[i], asteroids[j]);
+                if (collision){
+                    asteroids[i].collision();
+                    asteroids[j].collision();
+                }
+            }
+        }
         
 
 		if (inputHandler.GetKeycodeState(GLFW_KEY_R) & JUST_PRESSED) {
