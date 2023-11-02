@@ -1,3 +1,5 @@
+#pragma once
+
 #include "assignment5.hpp"
 #include "config.hpp"
 #include "core/Bonobo.h"
@@ -21,12 +23,17 @@ struct asteroid {
   glm::vec3 vel;
   glm::vec3 acc;
   float radius;
-  asteroid(glm::vec3 pos, float r);
-  void update_pos(float dt){pos = pos + vel*dt;};
+  asteroid(glm::vec3 pos, float r, glm::vec3 vel);
+  void update_pos(float dt){pos = pos + vel*dt; node.get_transform().SetTranslate(pos);};
   void update_vel(float dt){vel = vel + acc*dt;};
 private:
   bonobo::mesh_data mesh;
 };
 
-asteroid make_asteroid();
+asteroid generate_asteroid();
+
+glm::vec3 generate_asteroid_position();
+glm::vec3 generate_asteroid_velocity(const glm::vec3& );
+float generate_asteroid_radius();
+
 

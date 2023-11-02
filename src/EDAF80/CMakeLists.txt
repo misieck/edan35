@@ -105,7 +105,9 @@ add_executable (collisions)
 target_sources (
 	collisions
 	PRIVATE
-		[[collisions.cpp]]
+	[[collisions.cpp]]
+    [[asteroid.hpp]]
+    [[asteroid.cpp]]
 )
-target_link_libraries (collisions PRIVATE assignment_setup)
+target_link_libraries (collisions PRIVATE assignment_setup parametric_shapes)
 copy_dlls (collisions "${CMAKE_CURRENT_BINARY_DIR}")

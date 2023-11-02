@@ -46,7 +46,7 @@ void
 edaf80::Assignment5::run()
 {
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 6.0f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 9.0f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
 
@@ -65,7 +65,10 @@ edaf80::Assignment5::run()
     std::vector<asteroid> asteroids;
     const unsigned int N = 10;
     for (int i = 0; i<N; i++){
-      asteroids.push_back(asteroid( {1,1+N,1}, 1.f+ static_cast<float>(N)/10));
+        auto as = generate_asteroid();// asteroid( {1.f-i, 1.f+i, 0.f}, 0.5f+ static_cast<float>(i)/10);
+        as.node.set_program(&fallback_shader);
+        asteroids.push_back(as);
+      
     }
         
 
@@ -89,12 +92,14 @@ edaf80::Assignment5::run()
 	bool show_gui = true;
 	bool shader_reload_failed = false;
 	bool show_basis = false;
+    auto polygon_mode = bonobo::polygon_mode_t::fill;
 	float basis_thickness_scale = 1.0f;
 	float basis_length_scale = 1.0f;
 
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
+        float const deltaTime = std::chrono::duration<float>(deltaTimeUs).count();
 		lastTime = nowTime;
 
 		auto& io = ImGui::GetIO();
@@ -103,6 +108,11 @@ edaf80::Assignment5::run()
 		glfwPollEvents();
 		inputHandler.Advance();
 		mCamera.Update(deltaTimeUs, inputHandler);
+
+        for (int i = 0; i<N; i++){
+            asteroids[i].update_pos(deltaTime);
+        }
+        
 
 		if (inputHandler.GetKeycodeState(GLFW_KEY_R) & JUST_PRESSED) {
 			shader_reload_failed = !program_manager.ReloadAllPrograms();
@@ -140,10 +150,12 @@ edaf80::Assignment5::run()
 		mWindowManager.NewImGuiFrame();
 
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        bonobo::changePolygonMode(polygon_mode);
 
 
 		if (!shader_reload_failed) {
             for (int i = 0; i<N; i++){
+                
                 asteroids[i].node.render(mCamera.GetWorldToClipMatrix());
             }
     
@@ -154,6 +166,7 @@ edaf80::Assignment5::run()
 
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        
 
 		//
 		// Todo: If you want a custom ImGUI window, you can set it up
@@ -162,6 +175,7 @@ edaf80::Assignment5::run()
 		bool const opened = ImGui::Begin("Scene Controls", nullptr, ImGuiWindowFlags_None);
 		if (opened) {
 			ImGui::Checkbox("Show basis", &show_basis);
+            bonobo::uiSelectPolygonMode("Polygon mode", polygon_mode);
 			ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
 			ImGui::SliderFloat("Basis length scale", &basis_length_scale, 0.0f, 100.0f);
 		}
