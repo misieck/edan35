@@ -1,4 +1,5 @@
 #include "asteroid.hpp"
+#include <glm/ext/quaternion_geometric.hpp>
 #include <random>
 #include <cmath>
 #include "EDAF80/parametric_shapes.hpp"
@@ -13,8 +14,8 @@
 #define min_ast_size 1
 #define max_ast_size 4
 #define close_radius 10
-#define min_velocity_norm 1
-#define max_velocity_norm 3
+#define min_velocity_norm 3
+#define max_velocity_norm 10
 
 
 
@@ -35,9 +36,19 @@ asteroid generate_asteroid(){
                   );
 }
 
-void asteroid::collision(){
-  auto small_ball = parametric_shapes::createSphere(0.1, 4, 4);
-  node.set_geometry(small_ball);
+void asteroid::collision(const asteroid& b){
+  //auto small_ball = parametric_shapes::createSphere(0.3, RES, RES);
+  //node.set_geometry(small_ball);
+
+  glm::vec3 dx = this->pos - b.pos;
+  auto len_dx = glm::length(dx);
+  glm::vec3 dv = this->vel - b.vel;
+  float m1 = this->radius*this->radius*this->radius*4.f;
+  float m2 = b.radius*b.radius*b.radius*4.f;
+  float mass_factor = 2*m2/(m1+m2);
+  glm::vec3 new_v = this->vel - (mass_factor * glm::dot(dv, dx) / len_dx / len_dx ) * dx;
+  this->vel = new_v;
+  
 }
 
 
@@ -83,6 +94,7 @@ glm::vec3 generate_asteroid_velocity(const glm::vec3& position){
 
 
 bool test_collision(const asteroid& a, const asteroid& b ){
+  if (glm::dot(a.vel, b.vel) < 0 ) return false;
   glm::vec3 d = a.pos - b.pos;
   float squared_distance = glm::dot(d,d);
 

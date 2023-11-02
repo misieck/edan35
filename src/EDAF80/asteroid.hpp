@@ -26,7 +26,7 @@ struct asteroid {
   asteroid(glm::vec3 pos, float r, glm::vec3 vel); 
   void update_pos(float dt){pos = pos + vel*dt; node.get_transform().SetTranslate(pos);};
   void update_vel(float dt){vel = vel + acc*dt;};
-  void collision();
+  void collision(const asteroid &);
 private:
   bonobo::mesh_data mesh;
 };

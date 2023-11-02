@@ -46,9 +46,10 @@ void
 edaf80::Assignment5::run()
 {
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 9.0f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, -30.0f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
+    mCamera.mWorld.LookTowards(glm::vec3(1,0.5,0));
 
 	// Create the shader programs
 	ShaderProgramManager program_manager;
@@ -117,8 +118,9 @@ edaf80::Assignment5::run()
             for (int j = i + 1; j<N; j++){
                 auto collision = test_collision(asteroids[i], asteroids[j]);
                 if (collision){
-                    asteroids[i].collision();
-                    asteroids[j].collision();
+                    asteroids[i].collision( asteroids[j] );
+                    asteroids[j].collision( asteroids[i] );
+                  
                 }
             }
         }
