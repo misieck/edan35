@@ -100,3 +100,12 @@ install (
 		EDAF80_Assignment5
 	DESTINATION [[bin]]
 )
+
+add_executable (collisions)
+target_sources (
+	collisions
+	PRIVATE
+		[[collisions.cpp]]
+)
+target_link_libraries (collisions PRIVATE assignment_setup)
+copy_dlls (collisions "${CMAKE_CURRENT_BINARY_DIR}")
