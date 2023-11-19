@@ -19,6 +19,7 @@ public:
 
 public:
 	void Update(std::chrono::microseconds deltaTime, InputHandler &ih, bool ignoreKeyEvents = false, bool ignoreMouseEvents = false);
+	void Update_Ass5(std::chrono::microseconds deltaTime, InputHandler &ih, bool ignoreKeyEvents = false, bool ignoreMouseEvents = false);
 	void SetProjection(T fovy, T aspect, T nnear, T nfar);
 	void SetFov(T fovy);
 	T GetFov();

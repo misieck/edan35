@@ -56,6 +56,9 @@ void FPSCamera<T, P>::Update(std::chrono::microseconds deltaTime, InputHandler &
 		mouse_diff.y = -mouse_diff.y;
 		mouse_diff *= mMouseSensitivity;
 
+		//printf("Mouse_diff:%lf - %lf\n", mouse_diff.x, mouse_diff.y);
+		//printf("Mouse_sense:%.20f - %.20f\n", mMouseSensitivity[0], mMouseSensitivity[1]);
+
 		mWorld.PreRotateX(mouse_diff.y);
 		mWorld.RotateY(-mouse_diff.x);
 	}
@@ -74,9 +77,46 @@ void FPSCamera<T, P>::Update(std::chrono::microseconds deltaTime, InputHandler &
 		auto const movementChange = movementModifier * (mWorld.GetFront() * move + mWorld.GetRight() * strafe + mWorld.GetUp() * levitate);
 		auto const movementSpeed = mMovementSpeed * movementChange;
 
+		//printf("Movement speed[1]: %.20f - %.20f\n", movementChange.x, movementChange.y);
+		//printf("Movement speed[2]: %.20f - %.20f\n", movementSpeed.x * deltaTime_s.count(), movementSpeed.y * deltaTime_s.count());
+		
 		mWorld.Translate(movementSpeed * deltaTime_s.count());
 	}
 }
+
+
+
+
+
+template<typename T, glm::precision P>
+void FPSCamera<T, P>::Update_Ass5(std::chrono::microseconds deltaTime, InputHandler &ih, bool ignoreKeyEvents, bool ignoreMouseEvents)
+{
+	glm::tvec2<T, P> newMousePosition = glm::tvec2<T, P>(ih.GetMousePosition().x, ih.GetMousePosition().y);
+	glm::tvec2<T, P> mouse_diff = newMousePosition - mMousePosition;
+	mMousePosition = newMousePosition;
+
+	bool aux = false; 
+
+	if (!ih.IsKeyboardCapturedByUI() && !ignoreKeyEvents) {
+		T move = 0.0f, strafe = 0.0f, levitate = 0.0f;
+		if ((ih.GetKeycodeState(GLFW_KEY_W) & PRESSED)) move += 1.0f;
+		if ((ih.GetKeycodeState(GLFW_KEY_S) & PRESSED)) move -= 1.0f;
+		if ((ih.GetKeycodeState(GLFW_KEY_A) & PRESSED)) strafe -= 1.0f;
+		if ((ih.GetKeycodeState(GLFW_KEY_D) & PRESSED)) strafe += 1.0f;
+		if ((ih.GetKeycodeState(GLFW_KEY_Q) & PRESSED)) levitate -= 1.0f;
+		if ((ih.GetKeycodeState(GLFW_KEY_E) & PRESSED)) levitate += 1.0f;
+		//if ((ih.GetKeycodeState(GLFW_KEY_SPACE) & JUST_PRESSED)) aux = true;  
+
+		//printf("Mouse_diff:%lf - %lf\n", move, levitate);
+		//printf("Mouse_sense:%.20f - %.20f\n", mMouseSensitivity[0], mMouseSensitivity[1]);
+
+		printf("Move, strafe, levitate: %lf - %lf - %lf\n", move, strafe, levitate);
+		mWorld.RotateZ(move * 0.013f);
+		mWorld.RotateY(-strafe * 0.013f);
+		
+	}
+}
+
 
 template<typename T, glm::precision P>
 glm::tmat4x4<T, P> FPSCamera<T, P>::GetViewToWorldMatrix()

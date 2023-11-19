@@ -46,10 +46,10 @@ void
 edaf80::Assignment5::run()
 {
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, -30.0f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 0.0f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
-    mCamera.mWorld.LookTowards(glm::vec3(1,0.5,0));
+    mCamera.mWorld.LookTowards(glm::vec3(1,0,0));
 
 	// Create the shader programs
 	ShaderProgramManager program_manager;
@@ -108,7 +108,8 @@ edaf80::Assignment5::run()
 
 		glfwPollEvents();
 		inputHandler.Advance();
-		mCamera.Update(deltaTimeUs, inputHandler);
+		mCamera.Update_Ass5(deltaTimeUs, inputHandler);
+		
 
         for (int i = 0; i<N; i++){
             asteroids[i].update_pos(deltaTime);
