@@ -22,6 +22,7 @@ layout (location = 1) out vec4 geometry_specular;
 layout (location = 2) out vec4 geometry_normal;
 
 
+
 void main()
 {
 	if (has_opacity_texture && texture(opacity_texture, fs_in.texcoord).r < 1.0)
@@ -38,5 +39,12 @@ void main()
 		geometry_specular = texture(specular_texture, fs_in.texcoord);
 
 	// Worldspace normal
-	geometry_normal.xyz = vec3(0.0);
+    if (has_normals_texture) {
+      vec3 nmap = (((2 * texture(normals_texture, fs_in.texcoord)) - vec4(1.0))).xyz;
+      vec3 norm = (fs_in.tangent * nmap.x) + (fs_in.binormal * nmap.y) + (fs_in.normal * nmap.z);
+      geometry_normal.xyz = normalize(norm);
+    }
+    else {
+      geometry_normal.xyz = fs_in.normal;
+    }
 }

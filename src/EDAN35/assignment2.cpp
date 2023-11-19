@@ -463,6 +463,8 @@ edan35::Assignment2::run()
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbos[toU(FBO::GBuffer)]);
 			glViewport(0, 0, framebuffer_width, framebuffer_height);
 			glClear(GL_DEPTH_BUFFER_BIT);
+
+            glClear(GL_COLOR_BUFFER_BIT);
 			// XXX: Is any other clearing needed?
 
 			glUseProgram(fill_gbuffer_shader);
@@ -529,6 +531,7 @@ edan35::Assignment2::run()
 			//
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbos[toU(FBO::LightAccumulation)]);
 			glViewport(0, 0, framebuffer_width, framebuffer_height);
+            glClear(GL_COLOR_BUFFER_BIT);
 			// XXX: Is any clearing needed?
 			for (size_t i = 0; i < static_cast<size_t>(lights_nb); ++i) {
 				auto const& lightTransform = lightTransforms[i];
@@ -542,9 +545,12 @@ edan35::Assignment2::run()
 				utils::opengl::debug::beginDebugGroup("Create shadow map " + std::to_string(i));
 				glBeginQuery(GL_TIME_ELAPSED, elapsed_time_queries[toU(ElapsedTimeQuery::ShadowMap0Generation) + i]);
 
+                //all operations on ShadowMap
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbos[toU(FBO::ShadowMap)]);
 				glViewport(0, 0, constant::shadowmap_res_x, constant::shadowmap_res_y);
-				// XXX: Is any clearing needed?
+
+                glClear(GL_COLOR_BUFFER_BIT);
+                // XXX: Is any clearing needed?
 
 				glUseProgram(fill_shadowmap_shader);
 				glUniform1i(fill_shadowmap_shader_locations.light_index, static_cast<int>(i));
