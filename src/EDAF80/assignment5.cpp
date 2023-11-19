@@ -6,7 +6,11 @@
 #include "core/helpers.hpp"
 #include "core/ShaderProgramManager.hpp"
 
+#include <chrono>
 #include <imgui.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <tinyfiledialogs.h>
 
 #include <clocale>
@@ -14,6 +18,13 @@
 #include <vector>
 #include "core/node.hpp"
 #include "asteroid.hpp"
+
+using std::chrono::duration_cast;
+using std::chrono::high_resolution_clock;
+using std::chrono::microseconds;
+using std::chrono::milliseconds;
+using std::chrono::time_point;
+using std::literals::chrono_literals::operator""ms;
 
 bool  collision(const asteroid& a, const asteroid& b){
     return false;
@@ -53,6 +64,7 @@ edaf80::Assignment5::run()
 
 	// Create the shader programs
 	ShaderProgramManager program_manager;
+    
 	GLuint fallback_shader = 0u;
 	program_manager.CreateAndRegisterProgram("Fallback",
 	                                         { { ShaderType::vertex, "common/fallback.vert" },
@@ -62,13 +74,52 @@ edaf80::Assignment5::run()
 		LogError("Failed to load fallback shader");
 		return;
 	}
+
+    GLuint game_shader = 0u;
+	program_manager.CreateAndRegisterProgram("game",
+	                                         { { ShaderType::vertex, "EDAF80/game.vert" },
+	                                           { ShaderType::fragment, "EDAF80/game.frag" } },
+	                                         game_shader);
+	if (game_shader == 0u) {
+		LogError("Failed to load game shader");
+		return;
+	}
+
+
+    auto light_position = glm::vec3(-2.0f, 20.0f, 2.0f);
+    auto camera_position = mCamera.mWorld.GetTranslation();
+    float elapsed_time_s = 0.0f;
+    
+    auto const set_uniforms = [&light_position,&camera_position, &elapsed_time_s](GLuint program){
+        glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
+        glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
+        glUniform1f(glGetUniformLocation(program, "elapsed_time_s"), elapsed_time_s);
+	};
+
+    GLuint specTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_rough_2k.jpg"));
+    GLuint diffTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_diff_2k.jpg"));
+    GLuint normalTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_nor_2k.jpg"));
+
+
     
     std::vector<asteroid> asteroids;
+    std::vector<time_point<high_resolution_clock>> collisions;
+    
     const unsigned int N = 10;
     for (int i = 0; i<N; i++){
         auto as = generate_asteroid();// asteroid( {1.f-i, 1.f+i, 0.f}, 0.5f+ static_cast<float>(i)/10);
-        as.node.set_program(&fallback_shader);
+        as.node.set_program(&game_shader, set_uniforms);
+        bonobo::material_data demo_material;
+        demo_material.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+        demo_material.diffuse = glm::vec3(0.7f, 0.2f, 0.4f);
+        demo_material.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+        demo_material.shininess = 10.0f;
+        as.node.set_material_constants(demo_material);
+        as.node.add_texture("specTex", specTex, GL_TEXTURE_2D);
+        as.node.add_texture("diffTex", diffTex, GL_TEXTURE_2D);
+        as.node.add_texture("normalTex", normalTex, GL_TEXTURE_2D);
         asteroids.push_back(as);
+        collisions.push_back( high_resolution_clock::now() );
       
     }
         
@@ -96,13 +147,14 @@ edaf80::Assignment5::run()
     auto polygon_mode = bonobo::polygon_mode_t::fill;
 	float basis_thickness_scale = 1.0f;
 	float basis_length_scale = 1.0f;
-
+    int count =0;
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
-		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
+		auto const deltaTimeUs = duration_cast<microseconds>(nowTime - lastTime);
         float const deltaTime = std::chrono::duration<float>(deltaTimeUs).count();
 		lastTime = nowTime;
-
+        elapsed_time_s += std::chrono::duration<float>(deltaTimeUs).count();
+                
 		auto& io = ImGui::GetIO();
 		inputHandler.SetUICapture(io.WantCaptureMouse, io.WantCaptureKeyboard);
 
@@ -119,8 +171,14 @@ edaf80::Assignment5::run()
             for (int j = i + 1; j<N; j++){
                 auto collision = test_collision(asteroids[i], asteroids[j]);
                 if (collision){
-                    asteroids[i].collision( asteroids[j] );
-                    asteroids[j].collision( asteroids[i] );
+                    auto last_collision = collisions[i];
+                    auto now = high_resolution_clock::now();
+                    if (duration_cast<milliseconds>(now - last_collision) > 500ms){
+                        std::cout<<"("<<count++<<") Collision detected between "<<i<<" and "<<j<<std::endl;
+                        collisions[i] = now;
+                        asteroids[i].collision( asteroids[j] );
+                        asteroids[j].collision( asteroids[i] );
+                    }
                   
                 }
             }

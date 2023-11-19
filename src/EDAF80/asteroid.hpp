@@ -27,8 +27,11 @@ struct asteroid {
   void update_pos(float dt){pos = pos + vel*dt; node.get_transform().SetTranslate(pos);};
   void update_vel(float dt){vel = vel + acc*dt;};
   void collision(const asteroid &);
+  int id; 
 private:
   bonobo::mesh_data mesh;
+ 
+  static int count;
 };
 
 asteroid generate_asteroid();

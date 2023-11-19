@@ -21,7 +21,8 @@ namespace bonobo
 		normals,       //!< = 1, value of the binding point for normals
 		texcoords,     //!< = 2, value of the binding point for texcoords
 		tangents,      //!< = 3, value of the binding point for tangents
-		binormals      //!< = 4, value of the binding point for binormals
+		binormals,     //!< = 4, value of the binding point for binormals
+        sphereCoords
 	};
 
 	//! \brief Association of a sampler name used in GLSL to a

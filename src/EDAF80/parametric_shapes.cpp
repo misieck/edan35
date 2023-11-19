@@ -322,6 +322,7 @@ parametric_shapes::createSphere( const float radius,
 	auto texcoords = std::vector<glm::vec3>(n_vertex);
 	auto tangents  = std::vector<glm::vec3>(n_vertex);
 	auto binormals = std::vector<glm::vec3>(n_vertex);
+	auto sphereCoords = std::vector<glm::vec2>(n_vertex);
     
 	float const d_theta = glm::two_pi<float>() / (static_cast<float>(longitude_split_count));
 	float const d_phi = glm::pi<float>() / (static_cast<float>(latitude_split_count));
@@ -364,6 +365,7 @@ parametric_shapes::createSphere( const float radius,
 			// normal
 			auto const n = glm::cross (t, b);
 			normals[index] = n;
+            sphereCoords[index] = glm::vec2(phi, theta);
             theta -= d_theta;
             index++;
 		}
@@ -407,11 +409,14 @@ parametric_shapes::createSphere( const float radius,
 	auto const tangents_size = static_cast<GLsizeiptr>(tangents.size() * sizeof(glm::vec3));
 	auto const binormals_offset = tangents_offset + tangents_size;
 	auto const binormals_size = static_cast<GLsizeiptr>(binormals.size() * sizeof(glm::vec3));
+    auto const sphereCoords_offset = binormals_offset + binormals_size;
+	auto const sphereCoords_size = static_cast<GLsizeiptr>(sphereCoords.size() * sizeof(glm::vec2));
 	auto const bo_size = static_cast<GLsizeiptr>(vertices_size
 	                                            +normals_size
 	                                            +texcoords_size
 	                                            +tangents_size
 	                                            +binormals_size
+                                                +sphereCoords_size
 	                                            );
 	glGenBuffers(1, &data.bo);
 	assert(data.bo != 0u);
@@ -437,6 +442,10 @@ parametric_shapes::createSphere( const float radius,
 	glBufferSubData(GL_ARRAY_BUFFER, binormals_offset, binormals_size, static_cast<GLvoid const*>(binormals.data()));
 	glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::binormals));
 	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::binormals), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<GLvoid const*>(binormals_offset));
+
+    glBufferSubData(GL_ARRAY_BUFFER, sphereCoords_offset, sphereCoords_size, static_cast<GLvoid const*>(binormals.data()));
+	glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::sphereCoords));
+	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::sphereCoords), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<GLvoid const*>(sphereCoords_offset));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0u);
 

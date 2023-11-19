@@ -1,5 +1,7 @@
 #include "asteroid.hpp"
 #include <glm/ext/quaternion_geometric.hpp>
+#include <iostream>
+#include <ostream>
 #include <random>
 #include <cmath>
 #include "EDAF80/parametric_shapes.hpp"
@@ -17,8 +19,8 @@
 #define min_velocity_norm 3
 #define max_velocity_norm 10
 
-
-
+int asteroid::count = 0;
+    
 asteroid::asteroid(glm::vec3 pos, float radius, glm::vec3 vel){
   this->node = Node();
   this->mesh = parametric_shapes::createSphere(radius, RES, RES);
@@ -26,6 +28,8 @@ asteroid::asteroid(glm::vec3 pos, float radius, glm::vec3 vel){
   this->pos = pos;
   this->vel = vel;
   this->radius = radius;
+  this->id = ++count;
+ 
 }
 
 asteroid generate_asteroid(){
@@ -36,10 +40,12 @@ asteroid generate_asteroid(){
                   );
 }
 
+//TODO: add a bit of randomness to the collision
+
 void asteroid::collision(const asteroid& b){
   //auto small_ball = parametric_shapes::createSphere(0.3, RES, RES);
   //node.set_geometry(small_ball);
-
+  
   glm::vec3 dx = this->pos - b.pos;
   auto len_dx = glm::length(dx);
   glm::vec3 dv = this->vel - b.vel;
@@ -100,6 +106,8 @@ bool test_collision(const asteroid& a, const asteroid& b ){
 
   float squaredRadii = (a.radius+b.radius) * (a.radius+b.radius);
 
+  
   return squared_distance<=squaredRadii;
+  
   
 }
