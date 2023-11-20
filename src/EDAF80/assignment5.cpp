@@ -7,6 +7,7 @@
 #include "core/ShaderProgramManager.hpp"
 
 #include <chrono>
+#include <glm/fwd.hpp>
 #include <imgui.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -85,6 +86,16 @@ edaf80::Assignment5::run()
 		return;
 	}
 
+    GLuint bullet_shader = 0u;
+	program_manager.CreateAndRegisterProgram("bullet",
+	                                         { { ShaderType::vertex, "EDAF80/bullet.vert" },
+	                                           { ShaderType::fragment, "EDAF80/bullet.frag" } },
+	                                         bullet_shader);
+	if (bullet_shader == 0u) {
+		LogError("Failed to load game shader");
+		return;
+	}
+
 
     auto light_position = glm::vec3(-2.0f, 20.0f, 2.0f);
     auto camera_position = mCamera.mWorld.GetTranslation();
@@ -101,9 +112,14 @@ edaf80::Assignment5::run()
     GLuint normalTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_nor_2k.jpg"));
 
 
+    GLuint bulletSpecTex = bonobo::loadTexture2D(config::resources_path("textures/cobblestone_floor_08_rough_2k.jpg"));
+    GLuint bulletDiffTex = bonobo::loadTexture2D(config::resources_path("textures/leather_red_02_rough_2k.jpg"));
+
     
     std::vector<asteroid> asteroids;
+    std::vector<bullet> bullets;
     std::vector<time_point<high_resolution_clock>> collisions;
+    
     
     const unsigned int N = 10;
     for (int i = 0; i<N; i++){
@@ -148,7 +164,11 @@ edaf80::Assignment5::run()
 	float basis_thickness_scale = 1.0f;
 	float basis_length_scale = 1.0f;
     int count =0;
-	while (!glfwWindowShouldClose(window)) {
+
+    glm::vec3 our_position;
+    glm::vec3 gun_direction;
+
+    while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = duration_cast<microseconds>(nowTime - lastTime);
         float const deltaTime = std::chrono::duration<float>(deltaTimeUs).count();
@@ -161,10 +181,15 @@ edaf80::Assignment5::run()
 		glfwPollEvents();
 		inputHandler.Advance();
 		mCamera.Update_Ass5(deltaTimeUs, inputHandler);
-		
+		our_position = mCamera.mWorld.GetTranslation();//
+        gun_direction = mCamera.mWorld.GetMatrix() * glm::vec4(.0f,.0f,-1.0f,1.f);
 
         for (int i = 0; i<N; i++){
             asteroids[i].update_pos(deltaTime);
+        }
+
+        for (auto& bullet: bullets){
+            bullet.update_pos(deltaTime);
         }
 
         for (int i = 0; i<N-1; i++){
@@ -193,6 +218,20 @@ edaf80::Assignment5::run()
 				                   "Rendering is suspended until the issue is solved. Once fixed, just reload the shaders again.",
 				                   "error");
 		}
+
+        if (inputHandler.GetKeycodeState(GLFW_KEY_SPACE) & JUST_PRESSED){
+            bullet bul = generate_bullet(our_position, gun_direction);
+            bul.node.set_program(&bullet_shader, set_uniforms);
+            bonobo::material_data demo_material;
+            demo_material.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+            demo_material.diffuse = glm::vec3(0.7f, 0.7f, 0.0f);
+            demo_material.specular = glm::vec3(.5f, 1.0f, 1.0f);
+            demo_material.shininess = 10.0f;
+            bul.node.set_material_constants(demo_material);
+            bul.node.add_texture("bulletSpecTex", bulletSpecTex, GL_TEXTURE_2D);
+            bul.node.add_texture("bulletDiffTex", bulletDiffTex, GL_TEXTURE_2D);
+            bullets.push_back(bul );
+        }
 		if (inputHandler.GetKeycodeState(GLFW_KEY_F3) & JUST_RELEASED)
 			show_logs = !show_logs;
 		if (inputHandler.GetKeycodeState(GLFW_KEY_F2) & JUST_RELEASED)
@@ -228,6 +267,10 @@ edaf80::Assignment5::run()
             for (int i = 0; i<N; i++){
                 
                 asteroids[i].node.render(mCamera.GetWorldToClipMatrix());
+            }
+
+            for (auto bullet: bullets){
+                bullet.node.render(mCamera.GetWorldToClipMatrix());
             }
     
           //

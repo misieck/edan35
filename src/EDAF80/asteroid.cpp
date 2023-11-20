@@ -20,16 +20,18 @@
 #define max_velocity_norm 10
 
 int asteroid::count = 0;
-    
-asteroid::asteroid(glm::vec3 pos, float radius, glm::vec3 vel){
-  this->node = Node();
+
+
+bullet::bullet(glm::vec3 pos, glm::vec3 vel):sphere(pos, 0.06f, vel){
   this->mesh = parametric_shapes::createSphere(radius, RES, RES);
   this->node.set_geometry(this->mesh);
-  this->pos = pos;
-  this->vel = vel;
-  this->radius = radius;
-  this->id = ++count;
- 
+}
+
+
+asteroid::asteroid(glm::vec3 pos, float radius, glm::vec3 vel):sphere(pos,radius,vel){
+  this->mesh = parametric_shapes::createSphere(radius, RES, RES);
+  this->node.set_geometry(this->mesh);
+  this->id = ++count; 
 }
 
 asteroid generate_asteroid(){
@@ -38,6 +40,10 @@ asteroid generate_asteroid(){
                    generate_asteroid_radius(),
                    generate_asteroid_velocity(pos)
                   );
+}
+
+bullet generate_bullet(glm::vec3 pos, glm::vec3 dir){
+    return bullet(pos, dir*10.0f);
 }
 
 //TODO: add a bit of randomness to the collision
@@ -99,7 +105,7 @@ glm::vec3 generate_asteroid_velocity(const glm::vec3& position){
 }
 
 
-bool test_collision(const asteroid& a, const asteroid& b ){
+bool test_collision(const sphere& a, const sphere& b ){
   if (glm::dot(a.vel, b.vel) < 0 ) return false;
   glm::vec3 d = a.pos - b.pos;
   float squared_distance = glm::dot(d,d);
