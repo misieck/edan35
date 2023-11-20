@@ -24,7 +24,6 @@ in VS_OUT {
   vec3 vertex;
   vec3 normal;
   mat3 TBN;
-  mat3 TBNp;
 } fs_in;
 
 out vec4 frag_color;
@@ -34,7 +33,7 @@ void main()
     vec3 N;
     if (use_normal_mapping == 1) {
         vec3 t_N = texture(demoNormalTex, fs_in.tex_coord.xy).rgb * 2.0 - 1.0;
-        N = normalize( fs_in.TBNp * t_N );
+        N = normalize( fs_in.TBN * t_N );
         N = (normal_model_to_world*vec4(N,1)).xyz;
     } else {
         N = normalize(fs_in.normal);

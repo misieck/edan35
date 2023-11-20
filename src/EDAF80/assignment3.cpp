@@ -44,7 +44,7 @@ void
 edaf80::Assignment3::run()
 {
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 6.0f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 26.0f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
 
@@ -99,12 +99,13 @@ edaf80::Assignment3::run()
 	if (normal_shader == 0u)
 		LogError("Failed to load normal shader");
 
-    GLuint tangent_shader = 0u;
-	program_manager.CreateAndRegisterProgram("Tangent",
-	                                         { { ShaderType::vertex, "EDAF80/tangent.vert" },
-	                                           { ShaderType::fragment, "EDAF80/tangent.frag" } },
-	                                         tangent_shader);
-	if (tangent_shader == 0u)
+    GLuint game_shader = 0u;
+	program_manager.CreateAndRegisterProgram("Game",
+	                                         { { ShaderType::vertex, "EDAF80/game.vert" },
+	                                           { ShaderType::fragment, "EDAF80/game.frag" }
+},
+	                                         game_shader);
+	if (game_shader == 0u)
 		LogError("Failed to load tangent shader");
 GLuint bitangent_shader = 0u;
 	program_manager.CreateAndRegisterProgram("BiTangent",
@@ -129,10 +130,12 @@ GLuint bitangent_shader = 0u;
 
 	bool use_normal_mapping = false;
 	auto camera_position = mCamera.mWorld.GetTranslation();
-	auto const phong_set_uniforms = [&use_normal_mapping,&light_position,&camera_position](GLuint program){
+    float elapsed_time_s = 0.0f;
+	auto const phong_set_uniforms = [&use_normal_mapping,&light_position,&camera_position, &elapsed_time_s](GLuint program){
 		glUniform1i(glGetUniformLocation(program, "use_normal_mapping"), use_normal_mapping ? 1 : 0);
 		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
+        glUniform1f(glGetUniformLocation(program, "elapsed_time_s"), elapsed_time_s);
 	};
 
     
@@ -167,7 +170,7 @@ GLuint bitangent_shader = 0u;
     skybox.add_texture("cubemap", cubemap, GL_TEXTURE_CUBE_MAP);
         
     //	auto demo_shape = parametric_shapes::createQuad(0.4f, 0.4f, 2u, 2u);
-    auto demo_shape = parametric_shapes::createSphere(1.5f, 20u, 20u);
+    auto demo_shape = parametric_shapes::createSphere(10.5f, 80u, 80u);
     if (demo_shape.vao == 0u) {
 		LogError("Failed to retrieve the mesh for the demo sphere");
 		return;
@@ -214,6 +217,7 @@ GLuint bitangent_shader = 0u;
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
 		lastTime = nowTime;
+        elapsed_time_s += std::chrono::duration<float>(deltaTimeUs).count();
 
 		auto& io = ImGui::GetIO();
 		inputHandler.SetUICapture(io.WantCaptureMouse, io.WantCaptureKeyboard);

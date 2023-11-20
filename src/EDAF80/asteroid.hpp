@@ -35,7 +35,7 @@ private:
 };
 
 struct asteroid: sphere {
-  static const unsigned int RES = 10;
+  static const unsigned int RES = 150;
   asteroid(glm::vec3 pos, float r, glm::vec3 vel); 
   void collision(const asteroid &);
   int id; 

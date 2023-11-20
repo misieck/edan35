@@ -57,35 +57,43 @@ vec3 wave(vec2 pos, vec2 vel, float amp, float freq, float phase, float sharp, f
 void main()
 {
 
-    vs_out.TBNp = mat3(tangent, binormal, normal);
-    
-    vs_out.TBN = mat3(vec3(vertex_model_to_world * vec4(tangent, 0.0)),
+    mat3 TBN = mat3(tangent, binormal, normal);
+   /* 
+    mat3 TBN = mat3(vec3(vertex_model_to_world * vec4(tangent, 0.0)),
                       vec3(vertex_model_to_world * vec4(binormal, 0.0)),
                       vec3(normal_model_to_world * vec4(normal, 0.0))
                      );
+    */
     /*vs_out.TBN = mat3(vec3(vec4(tangent, 0.0  )* -1.0 ),
                       vec3(vec4(binormal, 0.0 ) * -1.0),
                       vec3(vec4(normal, 0.0   ) )
                      );
 */
 
-    vec2 amp = vec2(1.5, 2.0) ;
-    vec2 freq = vec2(0.3, 0.6);
-    vec2 phase = vec2(0.5, 1.3);
-    vec2 sharp = vec2(6.0, 2.0);
-    vec4 dir = vec4(-1.0, 0.0, -0.7, 0.7);
+    vec2 amp = vec2(1.9, 1.8) ;
+    vec2 freq = vec2(100.8, 200.0);
+    vec2 phase = vec2(1.5, 3.3);
+    vec2 sharp = vec2(4.0, 2.0);
+    vec4 dir = vec4(-1.0, -1.2, -2.7, 2.7);
     float dg_dx = 0;
     float dg_dz = 0;
     vec3 w1 = wave(sphereCoord, dir.xy, amp[0], freq[0], phase[0], sharp[0], elapsed_time_s, dg_dx, dg_dz);
     vec3 w2 = wave(sphereCoord, dir.zw, amp[1], freq[1], phase[1], sharp[1], elapsed_time_s, dg_dx, dg_dz);
     
-    vec3 d_surf= vs_out.TBN * (w1+w2);
+    vec3 T = vec3(0, dg_dz, 1);
+    vec3 B = vec3(1, dg_dx, 0);
+    vec3 N = vec3(-dg_dx, 1, -dg_dz);
+    mat3 TBN_tangent = mat3(normalize(T),normalize(B),normalize(N));
+
+    vs_out.TBN=mat3(normalize(TBN*T), normalize(TBN*B),normalize(TBN*N));
+    
+    vec3 d_surf= TBN * (w1+w2);
     
     
     //mat2 rot90 = mat2(vec2(0,1), vec2(1, 0));
     vs_out.tex_coord = vec3(texcoord.xy, 0);
     vs_out.vertex = vec3(vertex_model_to_world * vec4(vertex+d_surf, 1.0));
-    vs_out.normal = vec3(normal_model_to_world * vec4(normal, 0.0));
+    vs_out.normal = vec3(normal_model_to_world * vec4(TBN*normal, 0.0));
     vs_out.sphereCoord = sphereCoord;
 	gl_Position = vertex_world_to_clip * vertex_model_to_world * vec4(vs_out.vertex, 1.0);
 

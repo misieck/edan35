@@ -29,12 +29,17 @@ in VS_OUT {
 
 out vec4 frag_color;
 
+const vec4 water_deep = vec4(0.0, 0.0, 0.1, 1.0);
+const vec4 water_shallow = vec4(0.0, 0.5, 0.5, 1.0);
+float n1 = 1.0;
+float n2 = 1.333;
+int show_only_color = 1;
 void main()
 {
     vec3 N;
-    if (true) {
+    if (false) {
         vec3 t_N = texture(normalTex, fs_in.tex_coord.xy).rgb * 2.0 - 1.0;
-        N = normalize( fs_in.TBNp * t_N );
+        N = normalize( fs_in.TBN * t_N );
         N = (normal_model_to_world*vec4(N,1)).xyz;
     } else {
         N = normalize(fs_in.normal);
@@ -51,4 +56,27 @@ void main()
 	frag_color = vec4(ambient_colour, 1)
                 + diffuse
                 + spec;
+
+
+
+
+
+    float R0 = pow((n1-n2)/(n1+n2), 2);
+    float eta = n1/n2;
+    V = normalize(camera_position - fs_in.vertex); // normalize(camera_position - fs_in.vertex);
+
+
+    float facing_factor = 1.0 - max(dot(V,N), 0.0);
+	frag_color = mix(water_deep, water_shallow, facing_factor);
+
+    if (show_only_color == 1) return;
+    float fresnel = 1.0;
+    
+    fresnel = R0 + (1.0 - R0) * pow( 1-dot(V,N), 5.0);
+    
+    
+    vec3 reflection = normalize(reflect(-V, N));
+    vec3 refraction = normalize(refract(-V, N, eta));
+    //frag_color =  (frag_color + fresnel*texture(skybox, reflection) + (1-fresnel)*texture(skybox, refraction));
+
 }

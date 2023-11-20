@@ -38,7 +38,7 @@ asteroid generate_asteroid(){
   auto pos = generate_asteroid_position();
   return asteroid( pos,
                    generate_asteroid_radius(),
-                   generate_asteroid_velocity(pos)
+                   glm::vec3(0,0,0) //generate_asteroid_velocity(pos)
                   );
 }
 

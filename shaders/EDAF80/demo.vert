@@ -18,6 +18,7 @@ layout (location = 4) in vec3 binormal;
 uniform mat4 vertex_model_to_world;
 uniform mat4 normal_model_to_world;
 uniform mat4 vertex_world_to_clip;
+uniform float elapsed_time_s;
 
 // This is the custom output of this shader. If you want to retrieve this data
 // from another shader further down the pipeline, you need to declare the exact
@@ -33,18 +34,17 @@ out VS_OUT{
     vec3 vertex;
     vec3 normal;
     mat3 TBN;
-    mat3 TBNp;
 } vs_out;
 
 void main()
 {
-    vs_out.TBNp = mat3(tangent, binormal, normal);
-    
+    vs_out.TBN = mat3(tangent, binormal, normal);
+/*    
     vs_out.TBN = mat3(vec3(normal_model_to_world * vec4(tangent, 0.0)),
                       vec3(normal_model_to_world * vec4(binormal, 0.0)),
                       vec3(normal_model_to_world * vec4(normal, 0.0))
                      );
-    /*vs_out.TBN = mat3(vec3(vec4(tangent, 0.0  )* -1.0 ),
+*/    /*vs_out.TBN = mat3(vec3(vec4(tangent, 0.0  )* -1.0 ),
                       vec3(vec4(binormal, 0.0 ) * -1.0),
                       vec3(vec4(normal, 0.0   ) )
                      );
