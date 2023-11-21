@@ -538,7 +538,7 @@ edan35::Assignment2::run()
 				auto const light_view_matrix = lightOffsetTransform.GetMatrixInverse() * lightTransform.GetMatrixInverse();
 				auto const light_world_matrix = glm::inverse(light_view_matrix) * coneScaleTransform.GetMatrix();
 				auto const light_world_to_clip_matrix = lightProjection * light_view_matrix;
-
+                // std::cout<<"light "<<i<<", pos: "<<lightTransform.GetTranslation()<<std::endl;
 				//
 				// Pass 2.1: Generate shadow map for light i
 				//

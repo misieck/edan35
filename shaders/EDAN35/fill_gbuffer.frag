@@ -42,9 +42,10 @@ void main()
     if (has_normals_texture) {
       vec3 nmap = (((2 * texture(normals_texture, fs_in.texcoord)) - vec4(1.0))).xyz;
       vec3 norm = (fs_in.tangent * nmap.x) + (fs_in.binormal * nmap.y) + (fs_in.normal * nmap.z);
-      geometry_normal.xyz = normalize(norm);
+      norm = normalize(norm);
+      geometry_normal.xyz = (norm + 1.0) * 0.5f;
     }
     else {
-      geometry_normal.xyz = fs_in.normal;
+      geometry_normal.xyz = (fs_in.normal + 1.0) * 0.5;
     }
 }
