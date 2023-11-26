@@ -48,6 +48,29 @@ layout (location = 1) out vec4 light_specular_contribution;
 
 */
 
+
+float shadow(vec4 vertex){
+  vec4 vertexClipSpace_lightPOV = lights[light_index].view_projection * vertex;
+  vertexClipSpace_lightPOV /= vertexClipSpace_lightPOV.w;
+  float depth_lightPOV = vertexClipSpace_lightPOV.z * 0.5f + 0.5f;
+  vec2 vertexScreenPos_lightPOV =  vertexClipSpace_lightPOV.xy * 0.5f + 0.5f;
+
+  float z_buff_val_lightPOV_shadow = texture(shadow_texture, vertexScreenPos_lightPOV).x + 0.00001;
+  float ret=0.0;
+  //3x3 grid: 9 pixels
+  for (int i = -1; i<2; ++i)
+    for (int j = -1; j<2; ++j)
+    {
+      vec2 pos = vertexScreenPos_lightPOV + vec2(i,j)*inverse_screen_resolution;
+      z_buff_val_lightPOV_shadow = texture(shadow_texture, pos).x + 0.0001;
+      ret += z_buff_val_lightPOV_shadow > depth_lightPOV ? 0.1111111111: 0.0;
+    }
+  
+  
+  return ret; //z_buff_val_lightPOV_shadow > depth_lightPOV?1.0:0.0;
+}
+
+
 void main()
 {
     vec2 texCoords = gl_FragCoord.xy * inverse_screen_resolution;
@@ -57,7 +80,7 @@ void main()
     
     
 
-    float shininess_value = 0.2f; 
+    float shininess_value = 2.0f; 
     vec3 specular_color = vec3(1.0f, 1.0f, 1.0f);
   
 	vec2 shadowmap_texel_size = 1.0f / textureSize(shadow_texture, 0);
@@ -78,7 +101,8 @@ void main()
     float x0 = x_35;
     float angle_falloff = dot(normalize(light_direction), -L);
     angle_falloff = clamp((angle_falloff - x0) / (1-x0),0.0,1.0) ;
-    float dist_falloff = dot(distL, distL); 
+    float dist_falloff = dot(distL, distL);
+    float shadow = shadow(vertex);
     
     vec4 test = vec4(light_color * clamp( dot(N, L), 0.0, 1.0), 1); //vec4(0.2, 0.0, 0.0, 1.0);
     //test = ((vertex * .0012f)+vec4(1.0))*0.5f;
@@ -90,7 +114,7 @@ void main()
 
    // test = vec4(light_position*0.002f, 1);
     //test = vec4((L +1.0f)*0.5f,1);
-	light_diffuse_contribution  = test*angle_falloff/dist_falloff;
-	light_specular_contribution = vec4(specular_color*pow( max(dot(R,V),0.0), shininess_value), 1);
+	light_diffuse_contribution  = shadow*test*angle_falloff/dist_falloff;
+	light_specular_contribution = shadow*vec4(specular_color*pow( max(dot(R,V),0.0), shininess_value), 1);
     light_specular_contribution = light_specular_contribution * angle_falloff / dist_falloff;
 }

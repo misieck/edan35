@@ -7,6 +7,8 @@ in VS_OUT {
 	vec2 texcoord;
 } fs_in;
 
+out vec4 ret;
+
 void main()
 {
 	if (has_opacity_texture && texture(opacity_texture, fs_in.texcoord).r < 1.0)

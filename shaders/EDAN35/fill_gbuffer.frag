@@ -48,4 +48,5 @@ void main()
     else {
       geometry_normal.xyz = (fs_in.normal + 1.0) * 0.5;
     }
+//    geometry_normal.xyz = (fs_in.normal + 1.0) * 0.5;
 }
