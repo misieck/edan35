@@ -1,5 +1,10 @@
 #version 410
 
+uniform sampler2D diffuse_texture;
+uniform sampler2D specular_texture;
+uniform sampler2D light_d_texture;
+uniform sampler2D light_s_texture;
+
 struct ViewProjTransforms
 {
 	mat4 view_projection; // mCamera.GetWorldToClipMatrix();
@@ -11,52 +16,54 @@ layout (std140) uniform CameraViewProjTransforms
 	ViewProjTransforms camera;
 };
 
-uniform sampler2D screen_texture;
-uniform sampler2D depth_texture;
-uniform sampler2D normal_texture;
-uniform sampler2D shadow_texture;
 
-uniform vec2 inverse_screen_resolution;
-
-uniform vec3 camera_position;
-
-in vec4 gl_FragCoord;
-
-/*
-  	vec3 L = normalize(light_position - fs_in.vertex);
-    vec3 V = normalize(camera_position - fs_in.vertex);
-    vec3 R = normalize(reflect(-L,N));
-    vec4 diffuse = texture(demoDiffTex, fs_in.tex_coord.xy) * clamp( dot(N, L), 0.0, 1.0);
-    vec4 spec = texture(demoSpecTex, fs_in.tex_coord.xy)
-              * vec4(specular_colour, 1)
-              * pow( max(dot(R,V),0.0), shininess_value);
-
-*/
+layout (pixel_center_integer) in vec4 gl_FragCoord;
 
 out vec4 frag_color;
 
-void main()
+vec4 ordered_dithering(vec4 color)
 {
     int x = int(gl_FragCoord.x);
 	int y = int(gl_FragCoord.y);
-	float intensity = 0.95;
-	vec4 dark = vec4(0.0, 0.0, 0.0, 1.0);
+	float intensity = 0.9999999999999;
+	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
-    vec2 texCoords = gl_FragCoord.xy * inverse_screen_resolution;
-	vec4 rcol = texture(normal_texture, texCoords);
     mat4 dither_pattern = mat4(
 	  -0.5,     0.0,    -0.375,   0.125,
        0.25,   -0.25,    0.375,  -0.125,
       -0.3125,  0.1875, -0.4375,  0.0625,
        0.4375, -0.0625,  0.3125, -0.1875
-	);
-	float bw = dot(vec3(0.3,0.55,0.15), rcol);
+	) ;
+    
+	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
 	float dp = bw + dither_pattern[x%4][y%4] * intensity;
 	if (dp < 0.5) {
-	  frag_color = dark;
+	  return  dark;
 	}
 	else {
-	  frag_color = bright;
+	  return bright;
 	}
+
+
+}
+
+void main()
+{
+	ivec2 pixel_coord = ivec2(gl_FragCoord.xy);
+
+	vec3 diffuse  = texelFetch(diffuse_texture,  pixel_coord, 0).rgb;
+	vec3 specular = texelFetch(specular_texture, pixel_coord, 0).rgb;
+
+	vec3 light_d  = texelFetch(light_d_texture,  pixel_coord, 0).rgb;
+	vec3 light_s  = texelFetch(light_s_texture,  pixel_coord, 0).rgb;
+	const vec3 ambient = vec3(0.15);
+
+	vec4 rcol =  vec4((ambient + light_d) * diffuse + light_s * specular, 1.0);
+
+
+    frag_color = ordered_dithering(rcol);
+
+    
+        
 }

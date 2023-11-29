@@ -1,21 +1,12 @@
 #version 410
 
-struct ViewProjTransforms
+// Trick from
+// https://rauwendaal.net/2014/06/14/rendering-a-screen-covering-triangle-in-opengl/
+
+void main()
 {
-	mat4 view_projection;
-	mat4 view_projection_inverse;
-};
+	float x = -1.0 + float((gl_VertexID & 1) << 2);
+	float y = -1.0 + float((gl_VertexID & 2) << 1);
 
-layout (std140) uniform CameraViewProjTransforms
-{
-	ViewProjTransforms camera;
-};
-
-uniform mat4 vertex_model_to_world;
-
-layout (location = 0) in vec3 vertex;
-
-
-void main() {
-	gl_Position = camera.view_projection * vertex_model_to_world * vec4(vertex, 1.0);
+	gl_Position = vec4(x, y, 0.0, 1.0);
 }

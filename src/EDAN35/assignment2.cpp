@@ -313,6 +313,18 @@ edan35::Assignment2::run()
 		return;
 	}
 
+
+	GLuint dithering_shader = 0u;
+	program_manager.CreateAndRegisterProgram("dithering",
+	                                         { { ShaderType::vertex, "EDAN35/dithering.vert" },
+	                                           { ShaderType::fragment, "EDAN35/dithering.frag" } },
+	                                         dithering_shader);
+	if (dithering_shader == 0u) {
+		LogError("Failed to load light cones rendering shader");
+		return;
+	}
+
+    
 	auto const set_uniforms = [](GLuint /*program*/){};
 
 	ViewProjTransforms camera_view_proj_transforms;
@@ -657,7 +669,7 @@ edan35::Assignment2::run()
 			glBeginQuery(GL_TIME_ELAPSED, elapsed_time_queries[toU(ElapsedTimeQuery::Resolve)]);
 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbos[toU(FBO::Resolve)]);
-			glUseProgram(resolve_deferred_shader);
+			glUseProgram(dithering_shader);
 			glViewport(0, 0, framebuffer_width, framebuffer_height);
 			// XXX: Is any clearing needed?
 
