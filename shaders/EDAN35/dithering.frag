@@ -1,10 +1,5 @@
 #version 410
 
-uniform sampler2D diffuse_texture;
-uniform sampler2D specular_texture;
-uniform sampler2D light_d_texture;
-uniform sampler2D light_s_texture;
-
 struct ViewProjTransforms
 {
 	mat4 view_projection; // mCamera.GetWorldToClipMatrix();
@@ -15,6 +10,12 @@ layout (std140) uniform CameraViewProjTransforms
 {
 	ViewProjTransforms camera;
 };
+
+uniform sampler2D diffuse_texture;
+uniform sampler2D specular_texture;
+uniform sampler2D light_d_texture;
+uniform sampler2D light_s_texture;
+
 
 
 layout (pixel_center_integer) in vec4 gl_FragCoord;
@@ -35,6 +36,15 @@ vec4 ordered_dithering(vec4 color)
       -0.3125,  0.1875, -0.4375,  0.0625,
        0.4375, -0.0625,  0.3125, -0.1875
 	) ;
+
+    mat4 dither_pattern2 = mat4(
+	  -0.5,     0.0,    -0.375,   0.125,
+       0.25,   -0.25,    0.375,  -0.125,
+      -0.3125,  0.1875, -0.4375,  0.0625,
+       0.4375, -0.0625,  0.3125, -0.1875
+	) ;
+
+
     
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
 	float dp = bw + dither_pattern[x%4][y%4] * intensity;

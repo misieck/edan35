@@ -109,6 +109,7 @@ namespace
 		GLuint specular_texture_id{ 0u };
 		GLuint normals_texture_id{ 0u };
 		GLuint opacity_texture_id{ 0u };
+        GLuint ubo_CameraViewProjTransforms{ 0u };
 	};
 
 	struct GBufferShaderLocations
@@ -668,11 +669,18 @@ edan35::Assignment2::run()
 			utils::opengl::debug::beginDebugGroup("Resolve");
 			glBeginQuery(GL_TIME_ELAPSED, elapsed_time_queries[toU(ElapsedTimeQuery::Resolve)]);
 
+            
+
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbos[toU(FBO::Resolve)]);
 			glUseProgram(dithering_shader);
-			glViewport(0, 0, framebuffer_width, framebuffer_height);
-			// XXX: Is any clearing needed?
+            glBindBuffer(GL_UNIFORM_BUFFER, ubos[toU(UBO::CameraViewProjTransforms)]);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(camera_view_proj_transforms), &camera_view_proj_transforms);
+            glBindBuffer(GL_UNIFORM_BUFFER, ubos[toU(UBO::LightViewProjTransforms)]);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(light_view_proj_transforms), light_view_proj_transforms.data());
 
+            glViewport(0, 0, framebuffer_width, framebuffer_height);
+			// XXX: Is any clearing needed?
+            
 			bind_texture_with_sampler(GL_TEXTURE_2D, 0, resolve_deferred_shader, "diffuse_texture", textures[toU(Texture::GBufferDiffuse)], samplers[toU(Sampler::Nearest)]);
 			bind_texture_with_sampler(GL_TEXTURE_2D, 1, resolve_deferred_shader, "specular_texture", textures[toU(Texture::GBufferSpecular)], samplers[toU(Sampler::Nearest)]);
 			bind_texture_with_sampler(GL_TEXTURE_2D, 2, resolve_deferred_shader, "light_d_texture", textures[toU(Texture::LightDiffuseContribution)], samplers[toU(Sampler::Nearest)]);
@@ -684,6 +692,7 @@ edan35::Assignment2::run()
 			glBindSampler(2, 0u);
 			glBindSampler(1, 0u);
 			glBindSampler(0, 0u);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0u);            
 			glUseProgram(0u);
 
 			glEndQuery(GL_TIME_ELAPSED);
