@@ -2,6 +2,18 @@
 
 // Trick from
 // https://rauwendaal.net/2014/06/14/rendering-a-screen-covering-triangle-in-opengl/
+struct ViewProjTransforms
+{
+	mat4 view_projection; // mCamera.GetWorldToClipMatrix();
+	mat4 view_projection_inverse; // mCamera.GetClipToWorldMatrix();
+};
+
+layout (std140) uniform CameraViewProjTransforms
+{
+	ViewProjTransforms camera;
+};
+
+
 
 void main()
 {

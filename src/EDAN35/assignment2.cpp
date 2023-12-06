@@ -128,6 +128,20 @@ namespace
 	};
 	void fillGBufferShaderLocations(GLuint gbuffer_shader, GBufferShaderLocations& locations);
 
+    struct DitheringShaderLocations
+	{
+		GLuint ubo_CameraViewProjTransforms{ 0u };
+		GLuint diffuse_texture{ 0u };
+		GLuint specular_texture{ 0u };
+        GLuint light_d_texture{ 0u };
+        GLuint light_s_texture{ 0u };
+        GLuint inverse_screen_resolution{ 0u };
+        GLuint camera_fov{ 0u };
+
+	};
+	void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocations& locations);
+
+  
 	struct FillShadowmapShaderLocations
 	{
 		GLuint ubo_LightViewProjTransforms{ 0u };
@@ -279,9 +293,24 @@ edan35::Assignment2::run()
 		LogError("Failed to load shadowmap filling shader");
 		return;
 	}
-	FillShadowmapShaderLocations fill_shadowmap_shader_locations;
+	GLuint dithering_shader = 0u;
+	program_manager.CreateAndRegisterProgram("dithering",
+	                                         { { ShaderType::vertex, "EDAN35/dithering.vert" },
+	                                           { ShaderType::fragment, "EDAN35/dithering.frag" } },
+	                                         dithering_shader);
+	if (dithering_shader == 0u) {
+		LogError("Failed to load light cones rendering shader");
+		return;
+	}
+
+
+    FillShadowmapShaderLocations fill_shadowmap_shader_locations;
 	fillShadowmapShaderLocations(fill_shadowmap_shader, fill_shadowmap_shader_locations);
 
+	DitheringShaderLocations dithering_shader_locations;
+	fillDitheringShaderLocations(dithering_shader, dithering_shader_locations);
+
+    
 	GLuint accumulate_lights_shader = 0u;
 	program_manager.CreateAndRegisterProgram("Accumulate light",
 	                                         { { ShaderType::vertex, "EDAN35/accumulate_lights.vert" },
@@ -315,15 +344,7 @@ edan35::Assignment2::run()
 	}
 
 
-	GLuint dithering_shader = 0u;
-	program_manager.CreateAndRegisterProgram("dithering",
-	                                         { { ShaderType::vertex, "EDAN35/dithering.vert" },
-	                                           { ShaderType::fragment, "EDAN35/dithering.frag" } },
-	                                         dithering_shader);
-	if (dithering_shader == 0u) {
-		LogError("Failed to load light cones rendering shader");
-		return;
-	}
+
 
     
 	auto const set_uniforms = [](GLuint /*program*/){};
@@ -426,6 +447,7 @@ edan35::Assignment2::run()
 				fillGBufferShaderLocations(fill_gbuffer_shader, fill_gbuffer_shader_locations);
 				fillShadowmapShaderLocations(fill_shadowmap_shader, fill_shadowmap_shader_locations);
 				fillAccumulateLightsShaderLocations(accumulate_lights_shader, accumulate_light_shader_locations);
+                fillDitheringShaderLocations(dithering_shader, dithering_shader_locations);
 			}
 		}
 		if (inputHandler.GetKeycodeState(GLFW_KEY_F3) & JUST_RELEASED)
@@ -666,26 +688,36 @@ edan35::Assignment2::run()
 			//
 			// Pass 3: Compute final image using both the g-buffer and  the light accumulation buffer
 			//
+            camera_view_proj_transforms.view_projection = mCamera. GetWorldToClipMatrix();
+            camera_view_proj_transforms.view_projection_inverse = mCamera.GetClipToWorldMatrix();
 			utils::opengl::debug::beginDebugGroup("Resolve");
-			glBeginQuery(GL_TIME_ELAPSED, elapsed_time_queries[toU(ElapsedTimeQuery::Resolve)]);
-
-            
+			glBeginQuery(GL_TIME_ELAPSED, elapsed_time_queries[toU(ElapsedTimeQuery::Resolve)]);        
 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbos[toU(FBO::Resolve)]);
 			glUseProgram(dithering_shader);
+            glViewport(0, 0, framebuffer_width, framebuffer_height);
+
+
+            
             glBindBuffer(GL_UNIFORM_BUFFER, ubos[toU(UBO::CameraViewProjTransforms)]);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(camera_view_proj_transforms), &camera_view_proj_transforms);
             glBindBuffer(GL_UNIFORM_BUFFER, ubos[toU(UBO::LightViewProjTransforms)]);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(light_view_proj_transforms), light_view_proj_transforms.data());
 
-            glViewport(0, 0, framebuffer_width, framebuffer_height);
-			// XXX: Is any clearing needed?
             
-			bind_texture_with_sampler(GL_TEXTURE_2D, 0, resolve_deferred_shader, "diffuse_texture", textures[toU(Texture::GBufferDiffuse)], samplers[toU(Sampler::Nearest)]);
-			bind_texture_with_sampler(GL_TEXTURE_2D, 1, resolve_deferred_shader, "specular_texture", textures[toU(Texture::GBufferSpecular)], samplers[toU(Sampler::Nearest)]);
-			bind_texture_with_sampler(GL_TEXTURE_2D, 2, resolve_deferred_shader, "light_d_texture", textures[toU(Texture::LightDiffuseContribution)], samplers[toU(Sampler::Nearest)]);
-			bind_texture_with_sampler(GL_TEXTURE_2D, 3, resolve_deferred_shader, "light_s_texture", textures[toU(Texture::LightSpecularContribution)], samplers[toU(Sampler::Nearest)]);
+			// XXX: Is any clearing needed?
 
+            bind_texture_with_sampler(GL_TEXTURE_2D, 0, dithering_shader, "diffuse_texture", textures[toU(Texture::GBufferDiffuse)], samplers[toU(Sampler::Nearest)]);
+			bind_texture_with_sampler(GL_TEXTURE_2D, 1, dithering_shader, "specular_texture", textures[toU(Texture::GBufferSpecular)], samplers[toU(Sampler::Nearest)]);
+			bind_texture_with_sampler(GL_TEXTURE_2D, 2, dithering_shader, "light_d_texture", textures[toU(Texture::LightDiffuseContribution)], samplers[toU(Sampler::Nearest)]);
+			bind_texture_with_sampler(GL_TEXTURE_2D, 3, dithering_shader, "light_s_texture", textures[toU(Texture::LightSpecularContribution)], samplers[toU(Sampler::Nearest)]);
+
+
+            glUniform2f(dithering_shader_locations.inverse_screen_resolution,
+				            1.0f / static_cast<float>(framebuffer_width),
+				            1.0f / static_cast<float>(framebuffer_height));
+            glUniform1f(dithering_shader_locations.camera_fov, mCamera.GetFov());
+            
 			bonobo::drawFullscreen();
 
 			glBindSampler(3, 0u);
@@ -1100,6 +1132,28 @@ void fillGBufferShaderLocations(GLuint gbuffer_shader, GBufferShaderLocations& l
 	glUniformBlockBinding(gbuffer_shader, locations.ubo_CameraViewProjTransforms, toU(UBO::CameraViewProjTransforms));
 
 }
+
+void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocations& locations)
+{
+	locations.ubo_CameraViewProjTransforms = glGetUniformBlockIndex(dithering_shader, "CameraViewProjTransforms");
+    locations.diffuse_texture = glGetUniformLocation(dithering_shader, "diffuse_texture");
+	locations.specular_texture = glGetUniformLocation(dithering_shader, "specular_texture");
+	locations.light_d_texture = glGetUniformLocation(dithering_shader, "light_d_texture");
+	locations.light_s_texture = glGetUniformLocation(dithering_shader, "light_s_texture");
+	locations.inverse_screen_resolution = glGetUniformLocation(dithering_shader, "inverse_screen_resolution");
+    locations.camera_fov = glGetUniformLocation(dithering_shader, "camera_fov");
+    //locations.vertex_model_to_world = glGetUniformLocation(dithering_shader, "vertex_model_to_world");
+	//locations.normal_model_to_world = glGetUniformLocation(dithering_shader, "normal_model_to_world");
+	//locations.normals_texture = glGetUniformLocation(dithering_shader, "normals_texture");
+	//locations.opacity_texture = glGetUniformLocation(dithering_shader, "opacity_texture");
+	//locations.has_diffuse_texture = glGetUniformLocation(dithering_shader, "has_diffuse_texture");
+	//locations.has_specular_texture = glGetUniformLocation(dithering_shader, "has_specular_texture");
+	//locations.has_normals_texture = glGetUniformLocation(dithering_shader, "has_normals_texture");
+	//locations.has_opacity_texture = glGetUniformLocation(dithering_shader, "has_opacity_texture");
+	glUniformBlockBinding(dithering_shader, locations.ubo_CameraViewProjTransforms, toU(UBO::CameraViewProjTransforms));
+
+}
+
 
 void fillShadowmapShaderLocations(GLuint shadowmap_shader, FillShadowmapShaderLocations& locations)
 {
