@@ -200,6 +200,14 @@ edan35::Assignment2::~Assignment2()
 void
 edan35::Assignment2::run()
 {
+	GLuint cubemap = bonobo::loadTextureCubeMap(
+		config::resources_path("dither/BlueNoise64Tiled.png"),
+		config::resources_path("dither/BlueNoise64Tiled.png"),
+		config::resources_path("dither/BlueNoise64Tiled.png"),
+		config::resources_path("dither/BlueNoise64Tiled.png"),
+		config::resources_path("dither/BlueNoise64Tiled.png"),
+		config::resources_path("dither/BlueNoise64Tiled.png"));
+
 	// Load the geometry of Sponza
 	auto const sponza_geometry = bonobo::loadObjects(config::resources_path("sponza/sponza.obj"));
 	if (sponza_geometry.empty()) {
@@ -710,7 +718,8 @@ edan35::Assignment2::run()
             bind_texture_with_sampler(GL_TEXTURE_2D, 0, dithering_shader, "diffuse_texture", textures[toU(Texture::GBufferDiffuse)], samplers[toU(Sampler::Nearest)]);
 			bind_texture_with_sampler(GL_TEXTURE_2D, 1, dithering_shader, "specular_texture", textures[toU(Texture::GBufferSpecular)], samplers[toU(Sampler::Nearest)]);
 			bind_texture_with_sampler(GL_TEXTURE_2D, 2, dithering_shader, "light_d_texture", textures[toU(Texture::LightDiffuseContribution)], samplers[toU(Sampler::Nearest)]);
-			bind_texture_with_sampler(GL_TEXTURE_2D, 3, dithering_shader, "light_s_texture", textures[toU(Texture::LightSpecularContribution)], samplers[toU(Sampler::Nearest)]);
+			bind_texture_with_sampler(GL_TEXTURE_2D, 3, dithering_shader, "light_s_texture", textures[toU(Texture::LightSpecularContribution)], samplers[toU(Sampler::Nearest)]); 
+			bind_texture_with_sampler(GL_TEXTURE_CUBE_MAP, 4, dithering_shader, "dither_texture", cubemap, samplers[toU(Sampler::Nearest)]); 
 
 
             glUniform2f(dithering_shader_locations.inverse_screen_resolution,

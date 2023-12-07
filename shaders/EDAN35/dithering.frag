@@ -15,6 +15,7 @@ uniform sampler2D diffuse_texture;
 uniform sampler2D specular_texture;
 uniform sampler2D light_d_texture;
 uniform sampler2D light_s_texture;
+uniform samplerCube dither_texture;
 
 uniform float camera_fov;
 
@@ -30,9 +31,10 @@ vec4 ordered_dithering(vec4 color)
 {
 
     vec4 cam_offset = camera.view_projection * vec4(0.0, 0.0, -1.0, 1.0);
-   // cam_offset = vec4(0);
-    int x = int(gl_FragCoord.x + cam_offset.x * 1/inverse_screen_resolution.x);
-	int y = int(gl_FragCoord.y + cam_offset.y * 1/inverse_screen_resolution.y);
+    // cam_offset = vec4(0);
+    int x = 0;
+    x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
+	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
 	float intensity = 0.9999999999999;
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
@@ -54,7 +56,8 @@ vec4 ordered_dithering(vec4 color)
 
    // dither_pattern = camera.view_projection * dither_pattern;
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
-	float dp = bw + dither_pattern[x%4][y%4] * intensity;
+	// float dp = bw + dither_pattern[x%4][y%4] * intensity;
+	float dp = bw + texture(dither_texture, cam_offset.xyz).x - 0.5; 
 	if (dp < 0.5) {
 	  return  dark;
 	}
