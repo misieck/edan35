@@ -11,11 +11,14 @@ layout (std140) uniform CameraViewProjTransforms
 	ViewProjTransforms camera;
 };
 
+
 uniform sampler2D diffuse_texture;
 uniform sampler2D specular_texture;
 uniform sampler2D light_d_texture;
 uniform sampler2D light_s_texture;
 uniform samplerCube dither_texture;
+uniform sampler2D depth_texture;
+
 
 uniform float camera_fov;
 
@@ -68,9 +71,39 @@ vec4 ordered_dithering(vec4 color)
 
 }
 
+//bonobo::displayTexture({-0.95f,  0.55f}, {-0.55f,  0.95f}, textures[toU(Texture::ShadowMap)],                 samplers[toU(Sampler::Linear)], {0, 0, 0, -1}, glm::uvec2(framebuffer_width, framebuffer_height), true, lightProjectionNearPlane, lightProjectionFarPlane);
+
+float near = 0.01*100;
+float far = 20*100;
+bool linearise = true;
+
+float lineariseDepth(float value)
+{
+	return (2.0 * near) / (far + near - value * (far - near));
+}
+
+vec4 depth_val(sampler2D tex, vec2 coord)
+{
+    vec4 result;
+    ivec4 swizzle = ivec4(0,0,0,-1);
+	vec4 value = texture(tex, coord);
+	for (int i = 0; i < 4; ++i)
+		result[i] = (0 <= swizzle[i]) && (swizzle[i] <= 3)
+		          ? (linearise ? lineariseDepth(value[swizzle[i]]) : value[swizzle[i]])
+		          : 1.0;
+    return result;
+}
+
+
 void main()
 {
 	ivec2 pixel_coord = ivec2(gl_FragCoord.xy);
+    vec2 texCoords = gl_FragCoord.xy * inverse_screen_resolution;
+    
+    float D = texture(depth_texture, texCoords).x *2.0 - 1.0;
+    vec4 clipSpacePosition = vec4(texCoords*2.0f - vec2(1.0f), D, 1 );
+    vec4 worldSpacePosition = camera.view_projection_inverse*clipSpacePosition;
+    worldSpacePosition /= worldSpacePosition.w;
 
 	vec3 diffuse  = texelFetch(diffuse_texture,  pixel_coord, 0).rgb;
 	vec3 specular = texelFetch(specular_texture, pixel_coord, 0).rgb;
@@ -82,8 +115,12 @@ void main()
 	vec4 rcol =  vec4((ambient + light_d) * diffuse + light_s * specular, 1.0);
 
 
-    frag_color = ordered_dithering(rcol);
-
+    frag_color = texture(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
+    //frag_color = texelFetch(specular_texture, pixel_coord, 0);
+    //frag_color = ordered_dithering(rcol);
+    frag_color = depth_val(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
     
         
 }
+
+
