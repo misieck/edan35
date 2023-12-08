@@ -86,7 +86,7 @@ void main()
 	vec2 shadowmap_texel_size = 1.0f / textureSize(shadow_texture, 0);
 
     float D = texture(depth_texture, texCoords).x *2.0 - 1.0;
-    vec4 clipSpacePosition = vec4(texCoords*2.0f - vec2(1.0f), D, 1 );
+    vec4 clipSpacePosition = vec4(texCoords*2.0f - vec2(1.0f), D, 1.0 );
     vec4 worldSpacePosition = camera.view_projection_inverse*clipSpacePosition;
     worldSpacePosition /= worldSpacePosition.w;
     vec4 vertex = worldSpacePosition;

@@ -138,6 +138,7 @@ namespace
         GLuint depth_texture{ 0u };
         GLuint inverse_screen_resolution{ 0u };
         GLuint camera_fov{ 0u };
+		GLuint camera_position{ 0u };
 	};
 	void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocations& locations);
 
@@ -727,6 +728,7 @@ edan35::Assignment2::run()
 				            1.0f / static_cast<float>(framebuffer_width),
 				            1.0f / static_cast<float>(framebuffer_height));
             glUniform1f(dithering_shader_locations.camera_fov, mCamera.GetFov());
+			glUniform3fv(accumulate_light_shader_locations.camera_position, 1, glm::value_ptr(mCamera.mWorld.GetTranslation()));
             
 			bonobo::drawFullscreen();
 
@@ -1153,6 +1155,7 @@ void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocati
     locations.depth_texture = glGetUniformLocation(dithering_shader, "depth_texture");
 	locations.inverse_screen_resolution = glGetUniformLocation(dithering_shader, "inverse_screen_resolution");
     locations.camera_fov = glGetUniformLocation(dithering_shader, "camera_fov");
+	locations.camera_position = glGetUniformLocation(dithering_shader, "camera_position");
     //locations.vertex_model_to_world = glGetUniformLocation(dithering_shader, "vertex_model_to_world");
 	//locations.normal_model_to_world = glGetUniformLocation(dithering_shader, "normal_model_to_world");
 	//locations.normals_texture = glGetUniformLocation(dithering_shader, "normals_texture");

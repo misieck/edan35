@@ -21,7 +21,7 @@ uniform sampler2D depth_texture;
 
 
 uniform float camera_fov;
-
+uniform vec3 camera_position;
 
 
 layout (pixel_center_integer) in vec4 gl_FragCoord;
@@ -59,9 +59,29 @@ vec4 ordered_dithering(vec4 color)
 
    // dither_pattern = camera.view_projection * dither_pattern;
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
-	// float dp = bw + dither_pattern[x%4][y%4] * intensity;
-	float dp = bw + texture(dither_texture, cam_offset.xyz).x - 0.5; 
+	float dp = bw + dither_pattern[x%4][y%4] * intensity;
+	//float dp = bw + texture(dither_texture, cam_offset.xyz).x - 0.5; 
 	if (dp < 0.5) {
+	  return  dark;
+	}
+	else {
+	  return bright;
+	}
+
+
+}
+
+vec4 cube_dithering(vec4 color, vec3 dir)
+{
+	float intensity = 0.9999999999999;
+	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
+	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
+
+
+	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
+	float dp = (texture(dither_texture, dir).x - 0.5);
+	//return vec4(dp);
+	if (bw + dp < 0.5) {
 	  return  dark;
 	}
 	else {
@@ -104,6 +124,8 @@ void main()
     vec4 clipSpacePosition = vec4(texCoords*2.0f - vec2(1.0f), D, 1 );
     vec4 worldSpacePosition = camera.view_projection_inverse*clipSpacePosition;
     worldSpacePosition /= worldSpacePosition.w;
+    vec3 V = normalize(worldSpacePosition.xyz - camera_position);
+
 
 	vec3 diffuse  = texelFetch(diffuse_texture,  pixel_coord, 0).rgb;
 	vec3 specular = texelFetch(specular_texture, pixel_coord, 0).rgb;
@@ -115,10 +137,11 @@ void main()
 	vec4 rcol =  vec4((ambient + light_d) * diffuse + light_s * specular, 1.0);
 
 
-    frag_color = texture(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
+    //frag_color = texture(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
     //frag_color = texelFetch(specular_texture, pixel_coord, 0);
     //frag_color = ordered_dithering(rcol);
-    frag_color = depth_val(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
+    frag_color = cube_dithering(rcol, V);
+    //frag_color = depth_val(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
     
         
 }
