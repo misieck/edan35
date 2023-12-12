@@ -201,13 +201,15 @@ edan35::Assignment2::~Assignment2()
 void
 edan35::Assignment2::run()
 {
+	char* chosen = "dither/BlueNoise.png";
+
 	GLuint cubemap = bonobo::loadTextureCubeMap(
-		config::resources_path("dither/BlueNoise64Tiled.png"),
-		config::resources_path("dither/BlueNoise64Tiled.png"),
-		config::resources_path("dither/BlueNoise64Tiled.png"),
-		config::resources_path("dither/BlueNoise64Tiled.png"),
-		config::resources_path("dither/BlueNoise64Tiled.png"),
-		config::resources_path("dither/BlueNoise64Tiled.png"));
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen));
 
 	// Load the geometry of Sponza
 	auto const sponza_geometry = bonobo::loadObjects(config::resources_path("sponza/sponza.obj"));
