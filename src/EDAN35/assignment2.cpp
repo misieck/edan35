@@ -730,7 +730,7 @@ edan35::Assignment2::run()
 				            1.0f / static_cast<float>(framebuffer_width),
 				            1.0f / static_cast<float>(framebuffer_height));
             glUniform1f(dithering_shader_locations.camera_fov, mCamera.GetFov());
-			glUniform3fv(accumulate_light_shader_locations.camera_position, 1, glm::value_ptr(mCamera.mWorld.GetTranslation()));
+			glUniform3fv(dithering_shader_locations.camera_position, 1, glm::value_ptr(mCamera.mWorld.GetTranslation()));
             
 			bonobo::drawFullscreen();
 
