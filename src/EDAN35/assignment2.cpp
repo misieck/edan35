@@ -138,6 +138,7 @@ namespace
         GLuint light_s_texture{ 0u };
         GLuint depth_texture{ 0u };
         GLuint dither_simple_texture { 0u };
+        GLuint dither_bigdot_texture { 0u };
         GLuint dither_texture { 0u };
         GLuint inverse_screen_resolution{ 0u };
         GLuint camera_fov{ 0u };
@@ -216,7 +217,8 @@ edan35::Assignment2::run()
 		config::resources_path(chosen),
 		config::resources_path(chosen));
 
-    GLuint dither_simple_texture = bonobo::loadTexture2D("dither/BlueNoise.png");
+    GLuint dither_simple_texture = bonobo::loadTexture2D(config::resources_path(chosen));
+    GLuint dither_bigdot_texture = bonobo::loadTexture2D(config::resources_path("dither/bigdot.png"));
 	// Load the geometry of Sponza
 	auto const sponza_geometry = bonobo::loadObjects(config::resources_path("sponza/sponza.obj"));
 	if (sponza_geometry.empty()) {
@@ -732,6 +734,7 @@ edan35::Assignment2::run()
 			bind_texture_with_sampler(GL_TEXTURE_CUBE_MAP, 4, dithering_shader, "dither_texture", cubemap, samplers[toU(Sampler::Nearest)]);
             bind_texture_with_sampler(GL_TEXTURE_2D, 5, dithering_shader, "dither_simple_texture", dither_simple_texture, samplers[toU(Sampler::Nearest)]);
             bind_texture_with_sampler(GL_TEXTURE_2D, 6, dithering_shader, "depth_texture", textures[toU(Texture::DepthBuffer)], samplers[toU(Sampler::Nearest)]);
+            bind_texture_with_sampler(GL_TEXTURE_2D, 7, dithering_shader, "dither_bigdot_texture", dither_bigdot_texture, samplers[toU(Sampler::Nearest)]);
 
             
 
@@ -1169,7 +1172,8 @@ void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocati
 	locations.light_s_texture = glGetUniformLocation(dithering_shader, "light_s_texture");
     locations.depth_texture = glGetUniformLocation(dithering_shader, "depth_texture");
 	locations.inverse_screen_resolution = glGetUniformLocation(dithering_shader, "inverse_screen_resolution");
-    locations.dither_simple_texture = glGetUniformLocation(dithering_shader, "dither_simple_texture"); 
+    locations.dither_simple_texture = glGetUniformLocation(dithering_shader, "dither_simple_texture");
+    locations.dither_bigdot_texture = glGetUniformLocation(dithering_shader, "dither_bigdot_texture"); 
     locations.camera_fov = glGetUniformLocation(dithering_shader, "camera_fov");
 	locations.camera_position = glGetUniformLocation(dithering_shader, "camera_position");
 	locations.use_cubemap = glGetUniformLocation(dithering_shader, "use_cubemap");

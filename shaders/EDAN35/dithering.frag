@@ -19,6 +19,7 @@ uniform sampler2D light_s_texture;
 uniform samplerCube dither_texture;
 uniform sampler2D dither_simple_texture;
 uniform sampler2D depth_texture;
+uniform sampler2D dither_bigdot_texture;
 
 
 uniform float camera_fov;
@@ -94,9 +95,9 @@ vec4 blue_dithering(vec4 color)
     tCoord.x = int( gl_FragCoord.x)%1024;
     tCoord.y = int( gl_FragCoord.y)%1024;
     
-    float dither_color = (texelFetch(dither_simple_texture,  tCoord, 0)).y+0.38;
+    float dither_color = (texelFetch(dither_simple_texture,  tCoord, 0)).y;
     
-	float dp = bw + 0.4;
+	float dp = bw + dither_color - 0.5;
     //return vec4(vec3(dither_color), 1.0);
 	
 	if (dp < 0.5) {
@@ -108,6 +109,40 @@ vec4 blue_dithering(vec4 color)
 
 
 }
+
+vec4 dot_dithering(vec4 color)
+{
+
+    vec4 cam_offset = camera.view_projection * vec4(0.0, 0.0, -1.0, 1.0);
+    // cam_offset = vec4(0);
+    int x = 0;
+    x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
+	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
+	float intensity = 0.9999999999999;
+	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
+	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
+
+    // dither_pattern = camera.view_projection * dither_pattern;
+	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
+    ivec2 tCoord;
+    tCoord.x = int( gl_FragCoord.x)%128;
+    tCoord.y = int( gl_FragCoord.y)%128;
+    
+    float dither_color = (texelFetch(dither_bigdot_texture,  tCoord, 0)).y;
+    
+	float dp = bw + dither_color - 0.5;
+    //return vec4(vec3(dither_color), 1.0);
+	
+	if (dp < 0.5) {
+	  return  dark;
+	}
+	else {
+	  return bright;
+	}
+
+
+}
+
 
 
 vec4 cube_dithering(vec4 color, vec3 dir)

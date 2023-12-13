@@ -10,3 +10,4 @@ void main()
 {
 	frag_color = vec4(fs_in.texcoord, 0.0, 1.0);
 }
+
