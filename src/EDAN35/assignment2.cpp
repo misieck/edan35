@@ -142,6 +142,8 @@ namespace
         GLuint inverse_screen_resolution{ 0u };
         GLuint camera_fov{ 0u };
 		GLuint camera_position{ 0u };
+		GLuint use_cubemap{ 0u };
+		GLuint use_blue{ 0u };
 	};
 	void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocations& locations);
 
@@ -383,6 +385,8 @@ edan35::Assignment2::run()
 	std::array<glm::vec3, constant::lights_nb> lightColors;
 	int lights_nb = static_cast<int>(constant::lights_nb);
 	bool are_lights_paused = false;
+	bool use_cubemap = false;
+	bool use_blue = false;
 
 	for (size_t i = 0; i < static_cast<size_t>(lights_nb); ++i) {
 		lightTransforms[i].SetTranslate(glm::vec3(0.0f, 1.25f, 0.0f) * constant::scale_lengths);
@@ -736,6 +740,8 @@ edan35::Assignment2::run()
 				            1.0f / static_cast<float>(framebuffer_height));
             glUniform1f(dithering_shader_locations.camera_fov, mCamera.GetFov());
 			glUniform3fv(dithering_shader_locations.camera_position, 1, glm::value_ptr(mCamera.mWorld.GetTranslation()));
+			glUniform1i(dithering_shader_locations.use_cubemap, use_cubemap);
+			glUniform1i(dithering_shader_locations.use_blue, use_blue);
             
 			bonobo::drawFullscreen();
 
@@ -877,6 +883,8 @@ edan35::Assignment2::run()
 			ImGui::SliderInt("Number of lights", &lights_nb, 1, static_cast<int>(constant::lights_nb));
 			ImGui::Checkbox("Show textures", &show_textures);
 			ImGui::Checkbox("Show light cones wireframe", &show_cone_wireframe);
+			ImGui::Checkbox("Use cubemap", &use_cubemap);
+			ImGui::Checkbox("Use blue noise", &use_blue);
 			ImGui::Separator();
 			ImGui::Checkbox("Show basis", &show_basis);
 			ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
@@ -1164,6 +1172,8 @@ void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocati
     locations.dither_simple_texture = glGetUniformLocation(dithering_shader, "dither_simple_texture"); 
     locations.camera_fov = glGetUniformLocation(dithering_shader, "camera_fov");
 	locations.camera_position = glGetUniformLocation(dithering_shader, "camera_position");
+	locations.use_cubemap = glGetUniformLocation(dithering_shader, "use_cubemap");
+	locations.use_blue = glGetUniformLocation(dithering_shader, "use_blue");
     //locations.vertex_model_to_world = glGetUniformLocation(dithering_shader, "vertex_model_to_world");
 	//locations.normal_model_to_world = glGetUniformLocation(dithering_shader, "normal_model_to_world");
 	//locations.normals_texture = glGetUniformLocation(dithering_shader, "normals_texture");

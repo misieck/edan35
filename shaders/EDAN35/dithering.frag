@@ -24,6 +24,9 @@ uniform sampler2D depth_texture;
 uniform float camera_fov;
 uniform vec3 camera_position;
 
+uniform int use_cubemap;
+uniform int use_blue;
+
 
 layout (pixel_center_integer) in vec4 gl_FragCoord;
 
@@ -177,8 +180,17 @@ void main()
     //frag_color = texture(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
     //frag_color = texelFetch(specular_texture, pixel_coord, 0);
     //frag_color = ordered_dithering(rcol);
-    frag_color = cube_dithering(rcol, V);
-    frag_color = blue_dithering(rcol);
+	if (use_cubemap) {
+      frag_color = cube_dithering(rcol, V);
+	}
+	else {
+	  if (use_blue) {
+        frag_color = blue_dithering(rcol);   
+	  }
+	  else {
+	    frag_color = ordered_dithering(rcol);
+	  }
+	}
     //frag_color = depth_val(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
     
         
