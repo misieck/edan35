@@ -137,6 +137,7 @@ namespace
         GLuint light_d_texture{ 0u };
         GLuint light_s_texture{ 0u };
         GLuint depth_texture{ 0u };
+        GLuint normal_texture{ 0u };
         GLuint dither_simple_texture { 0u };
         GLuint dither_bigdot_texture { 0u };
 		GLuint dither_texture{ 0u };
@@ -145,7 +146,10 @@ namespace
         GLuint camera_fov{ 0u };
 		GLuint camera_position{ 0u };
 		GLuint use_cubemap{ 0u };
-		GLuint use_blue{ 0u };
+        GLuint use_blue{ 0u };
+        GLuint add_sobel{ 0u };
+        GLuint add_white_sobel{ 0u };
+        GLuint only_sobel{ 0u };
 	};
 	void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocations& locations);
 
@@ -400,6 +404,9 @@ edan35::Assignment2::run()
 	bool are_lights_paused = false;
 	bool use_cubemap = false;
 	bool use_blue = false;
+    bool add_sobel = false;
+    bool add_white_sobel = true;
+    bool only_sobel = false;
 
 	for (size_t i = 0; i < static_cast<size_t>(lights_nb); ++i) {
 		lightTransforms[i].SetTranslate(glm::vec3(0.0f, 1.25f, 0.0f) * constant::scale_lengths);
@@ -745,8 +752,9 @@ edan35::Assignment2::run()
 			bind_texture_with_sampler(GL_TEXTURE_CUBE_MAP, 4, dithering_shader, "dither_texture", cubemap, samplers[toU(Sampler::Nearest)]);
             bind_texture_with_sampler(GL_TEXTURE_2D, 5, dithering_shader, "dither_simple_texture", dither_simple_texture, samplers[toU(Sampler::Nearest)]);
             bind_texture_with_sampler(GL_TEXTURE_2D, 6, dithering_shader, "depth_texture", textures[toU(Texture::DepthBuffer)], samplers[toU(Sampler::Nearest)]);
-            bind_texture_with_sampler(GL_TEXTURE_2D, 7, dithering_shader, "dither_bigdot_texture", dither_bigdot_texture, samplers[toU(Sampler::Nearest)]);
-			bind_texture_with_sampler(GL_TEXTURE_CUBE_MAP, 8, dithering_shader, "dither_texture_bayer", cubemap2, samplers[toU(Sampler::Nearest)]);
+            bind_texture_with_sampler(GL_TEXTURE_2D, 7, dithering_shader, "normal_texture", textures[toU(Texture::GBufferWorldSpaceNormal)], samplers[toU(Sampler::Nearest)]);
+            bind_texture_with_sampler(GL_TEXTURE_2D, 8, dithering_shader, "dither_bigdot_texture", dither_bigdot_texture, samplers[toU(Sampler::Nearest)]);
+			bind_texture_with_sampler(GL_TEXTURE_CUBE_MAP, 9, dithering_shader, "dither_texture_bayer", cubemap2, samplers[toU(Sampler::Nearest)]);
 
 
             
@@ -758,6 +766,9 @@ edan35::Assignment2::run()
 			glUniform3fv(dithering_shader_locations.camera_position, 1, glm::value_ptr(mCamera.mWorld.GetTranslation()));
 			glUniform1i(dithering_shader_locations.use_cubemap, use_cubemap);
 			glUniform1i(dithering_shader_locations.use_blue, use_blue);
+            glUniform1i(dithering_shader_locations.add_sobel, add_sobel);
+            glUniform1i(dithering_shader_locations.add_white_sobel, add_white_sobel);
+            glUniform1i(dithering_shader_locations.only_sobel, only_sobel);
             
 			bonobo::drawFullscreen();
 
@@ -902,6 +913,10 @@ edan35::Assignment2::run()
 			ImGui::Checkbox("Use cubemap", &use_cubemap);
 			ImGui::Checkbox("Use blue noise", &use_blue);
 			ImGui::Separator();
+            ImGui::Checkbox("Add Edges ", &add_sobel);
+            ImGui::Checkbox("Bright edges", &add_white_sobel);
+            ImGui::Checkbox("Show only edges", &only_sobel);
+            ImGui::Separator();
 			ImGui::Checkbox("Show basis", &show_basis);
 			ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
 			ImGui::SliderFloat("Basis length scale", &basis_length_scale, 0.0f, 100.0f);
@@ -1184,6 +1199,7 @@ void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocati
 	locations.light_d_texture = glGetUniformLocation(dithering_shader, "light_d_texture");
 	locations.light_s_texture = glGetUniformLocation(dithering_shader, "light_s_texture");
     locations.depth_texture = glGetUniformLocation(dithering_shader, "depth_texture");
+    locations.normal_texture = glGetUniformLocation(dithering_shader, "normal_texture");
 	locations.inverse_screen_resolution = glGetUniformLocation(dithering_shader, "inverse_screen_resolution");
     locations.dither_simple_texture = glGetUniformLocation(dithering_shader, "dither_simple_texture");
     locations.dither_bigdot_texture = glGetUniformLocation(dithering_shader, "dither_bigdot_texture"); 
@@ -1191,14 +1207,9 @@ void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocati
 	locations.camera_position = glGetUniformLocation(dithering_shader, "camera_position");
 	locations.use_cubemap = glGetUniformLocation(dithering_shader, "use_cubemap");
 	locations.use_blue = glGetUniformLocation(dithering_shader, "use_blue");
-    //locations.vertex_model_to_world = glGetUniformLocation(dithering_shader, "vertex_model_to_world");
-	//locations.normal_model_to_world = glGetUniformLocation(dithering_shader, "normal_model_to_world");
-	//locations.normals_texture = glGetUniformLocation(dithering_shader, "normals_texture");
-	//locations.opacity_texture = glGetUniformLocation(dithering_shader, "opacity_texture");
-	//locations.has_diffuse_texture = glGetUniformLocation(dithering_shader, "has_diffuse_texture");
-	//locations.has_specular_texture = glGetUniformLocation(dithering_shader, "has_specular_texture");
-	//locations.has_normals_texture = glGetUniformLocation(dithering_shader, "has_normals_texture");
-	//locations.has_opacity_texture = glGetUniformLocation(dithering_shader, "has_opacity_texture");
+    locations.add_sobel = glGetUniformLocation(dithering_shader, "add_sobel");
+    locations.add_white_sobel = glGetUniformLocation(dithering_shader, "add_white_sobel");
+    locations.only_sobel = glGetUniformLocation(dithering_shader, "only_sobel");
 	glUniformBlockBinding(dithering_shader, locations.ubo_CameraViewProjTransforms, toU(UBO::CameraViewProjTransforms));
 
 }
