@@ -17,6 +17,7 @@ uniform sampler2D specular_texture;
 uniform sampler2D light_d_texture;
 uniform sampler2D light_s_texture;
 uniform samplerCube dither_texture;
+uniform sampler2D dither_simple_texture;
 uniform sampler2D depth_texture;
 
 
@@ -59,7 +60,8 @@ vec4 ordered_dithering(vec4 color)
 
    // dither_pattern = camera.view_projection * dither_pattern;
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
-	float dp = bw + dither_pattern[x%4][y%4] * intensity;
+    float dither_color = dither_pattern[x%4][y%4];
+	float dp = bw + dither_color * intensity;
 	//float dp = bw + texture(dither_texture, cam_offset.xyz).x - 0.5; 
 	if (dp < 0.5) {
 	  return  dark;
@@ -70,6 +72,40 @@ vec4 ordered_dithering(vec4 color)
 
 
 }
+
+vec4 blue_dithering(vec4 color)
+{
+
+    vec4 cam_offset = camera.view_projection * vec4(0.0, 0.0, -1.0, 1.0);
+    // cam_offset = vec4(0);
+    int x = 0;
+    x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
+	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
+	float intensity = 0.9999999999999;
+	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
+	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
+
+    // dither_pattern = camera.view_projection * dither_pattern;
+	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
+    ivec2 tCoord;
+    tCoord.x = int( gl_FragCoord.x)%1024;
+    tCoord.y = int( gl_FragCoord.y)%1024;
+    
+    float dither_color = (texelFetch(dither_simple_texture,  tCoord, 0)).y+0.38;
+    
+	float dp = bw + 0.4;
+    //return vec4(vec3(dither_color), 1.0);
+	
+	if (dp < 0.5) {
+	  return  dark;
+	}
+	else {
+	  return bright;
+	}
+
+
+}
+
 
 vec4 cube_dithering(vec4 color, vec3 dir)
 {
@@ -128,6 +164,7 @@ void main()
 
 
 	vec3 diffuse  = texelFetch(diffuse_texture,  pixel_coord, 0).rgb;
+    //diffuse  = texelFetch(dither_simple_texture,  pixel_coord, 0).rgb;
 	vec3 specular = texelFetch(specular_texture, pixel_coord, 0).rgb;
 
 	vec3 light_d  = texelFetch(light_d_texture,  pixel_coord, 0).rgb;
@@ -141,6 +178,7 @@ void main()
     //frag_color = texelFetch(specular_texture, pixel_coord, 0);
     //frag_color = ordered_dithering(rcol);
     frag_color = cube_dithering(rcol, V);
+    frag_color = blue_dithering(rcol);
     //frag_color = depth_val(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
     
         
