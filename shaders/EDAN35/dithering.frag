@@ -17,6 +17,7 @@ uniform sampler2D specular_texture;
 uniform sampler2D light_d_texture;
 uniform sampler2D light_s_texture;
 uniform samplerCube dither_texture;
+uniform samplerCube dither_texture_bayer;
 uniform sampler2D dither_simple_texture;
 uniform sampler2D depth_texture;
 uniform sampler2D dither_bigdot_texture;
@@ -161,8 +162,24 @@ vec4 cube_dithering(vec4 color, vec3 dir)
 	else {
 	  return bright;
 	}
+}
+
+vec4 cube_dithering_bayer(vec4 color, vec3 dir)
+{
+	float intensity = 0.9999999999999;
+	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
+	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
 
+	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
+	float dp = (texture(dither_texture_bayer, dir).x - 0.5);
+	//return vec4(dp);
+	if (bw + dp < 0.5) {
+	  return  dark;
+	}
+	else {
+	  return bright;
+	}
 }
 
 //bonobo::displayTexture({-0.95f,  0.55f}, {-0.55f,  0.95f}, textures[toU(Texture::ShadowMap)],                 samplers[toU(Sampler::Linear)], {0, 0, 0, -1}, glm::uvec2(framebuffer_width, framebuffer_height), true, lightProjectionNearPlane, lightProjectionFarPlane);
@@ -216,7 +233,12 @@ void main()
     //frag_color = texelFetch(specular_texture, pixel_coord, 0);
     //frag_color = ordered_dithering(rcol);
 	if (use_cubemap) {
-      frag_color = cube_dithering(rcol, V);
+	  if (use_blue) {
+        frag_color = cube_dithering(rcol, V);
+	  }
+	  else {
+	    frag_color = cube_dithering_bayer(rcol, V);
+	  }
 	}
 	else {
 	  if (use_blue) {

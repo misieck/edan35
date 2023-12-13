@@ -139,7 +139,8 @@ namespace
         GLuint depth_texture{ 0u };
         GLuint dither_simple_texture { 0u };
         GLuint dither_bigdot_texture { 0u };
-        GLuint dither_texture { 0u };
+		GLuint dither_texture{ 0u };
+		GLuint dither_texture_bayer { 0u };
         GLuint inverse_screen_resolution{ 0u };
         GLuint camera_fov{ 0u };
 		GLuint camera_position{ 0u };
@@ -217,7 +218,17 @@ edan35::Assignment2::run()
 		config::resources_path(chosen),
 		config::resources_path(chosen));
 
-    GLuint dither_simple_texture = bonobo::loadTexture2D(config::resources_path(chosen));
+	chosen = "dither/BayerNoise.png";
+
+	GLuint cubemap2 = bonobo::loadTextureCubeMap(
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen),
+		config::resources_path(chosen));
+
+    GLuint dither_simple_texture = bonobo::loadTexture2D("dither/BlueNoise.png");
     GLuint dither_bigdot_texture = bonobo::loadTexture2D(config::resources_path("dither/bigdot.png"));
 	// Load the geometry of Sponza
 	auto const sponza_geometry = bonobo::loadObjects(config::resources_path("sponza/sponza.obj"));
@@ -735,6 +746,8 @@ edan35::Assignment2::run()
             bind_texture_with_sampler(GL_TEXTURE_2D, 5, dithering_shader, "dither_simple_texture", dither_simple_texture, samplers[toU(Sampler::Nearest)]);
             bind_texture_with_sampler(GL_TEXTURE_2D, 6, dithering_shader, "depth_texture", textures[toU(Texture::DepthBuffer)], samplers[toU(Sampler::Nearest)]);
             bind_texture_with_sampler(GL_TEXTURE_2D, 7, dithering_shader, "dither_bigdot_texture", dither_bigdot_texture, samplers[toU(Sampler::Nearest)]);
+			bind_texture_with_sampler(GL_TEXTURE_CUBE_MAP, 8, dithering_shader, "dither_texture_bayer", cubemap2, samplers[toU(Sampler::Nearest)]);
+
 
             
 
