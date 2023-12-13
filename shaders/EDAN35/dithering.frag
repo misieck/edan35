@@ -26,8 +26,8 @@ uniform sampler2D dither_bigdot_texture;
 uniform float camera_fov;
 uniform vec3 camera_position;
 
-uniform int use_cubemap;
-uniform int use_blue;
+uniform bool use_cubemap;
+uniform bool use_blue;
 
 
 layout (pixel_center_integer) in vec4 gl_FragCoord;

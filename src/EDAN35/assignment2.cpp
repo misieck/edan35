@@ -228,7 +228,7 @@ edan35::Assignment2::run()
 		config::resources_path(chosen),
 		config::resources_path(chosen));
 
-    GLuint dither_simple_texture = bonobo::loadTexture2D("dither/BlueNoise.png");
+    GLuint dither_simple_texture = bonobo::loadTexture2D(config::resources_path("dither/BlueNoise.png"));
     GLuint dither_bigdot_texture = bonobo::loadTexture2D(config::resources_path("dither/bigdot.png"));
 	// Load the geometry of Sponza
 	auto const sponza_geometry = bonobo::loadObjects(config::resources_path("sponza/sponza.obj"));
