@@ -33,6 +33,8 @@ uniform bool use_blue;
 uniform bool add_sobel;
 uniform bool add_white_sobel;
 uniform bool only_sobel;
+uniform float intensity;
+uniform float edginess;
 
 
 layout (pixel_center_integer) in vec4 gl_FragCoord;
@@ -49,7 +51,6 @@ vec4 ordered_dithering(vec4 color)
     int x = 0;
     x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
 	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
-	float intensity = 0.9999999999999;
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
@@ -83,7 +84,6 @@ vec4 blue_dithering(vec4 color)
     int x = 0;
     x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
 	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
-	float intensity = 0.9999999999999;
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
@@ -95,7 +95,7 @@ vec4 blue_dithering(vec4 color)
     
     float dither_color = (texelFetch(dither_simple_texture,  tCoord, 0)).y;
     
-	float dp = bw + dither_color - 0.5;
+	float dp = bw + (dither_color - 0.5)*intensity;
     //return vec4(vec3(dither_color), 1.0);
 	
 	if (dp < 0.5) {
@@ -116,7 +116,6 @@ vec4 dot_dithering(vec4 color)
     int x = 0;
     x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
 	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
-	float intensity = 0.9999999999999;
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
@@ -128,7 +127,7 @@ vec4 dot_dithering(vec4 color)
     
     float dither_color = (texelFetch(dither_bigdot_texture,  tCoord, 0)).y;
     
-	float dp = bw + dither_color - 0.5;
+	float dp = bw + (dither_color - 0.5)*intensity;
     //return vec4(vec3(dither_color), 1.0);
 	
 	if (dp < 0.5) {
@@ -145,13 +144,12 @@ vec4 dot_dithering(vec4 color)
 
 vec4 cube_dithering(vec4 color, vec3 dir)
 {
-	float intensity = 0.9999999999999;
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
 
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
-	float dp = (texture(dither_texture, dir).x - 0.5);
+	float dp = (texture(dither_texture, dir).x - 0.5)*intensity;
 	//return vec4(dp);
 	if (bw + dp < 0.5) {
 	  return  dark;
@@ -163,13 +161,12 @@ vec4 cube_dithering(vec4 color, vec3 dir)
 
 vec4 cube_dithering_bayer(vec4 color, vec3 dir)
 {
-	float intensity = 0.9999999999999;
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
 
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
-	float dp = (texture(dither_texture_bayer, dir).x - 0.5);
+	float dp = (texture(dither_texture_bayer, dir).x - 0.5)*intensity;
 	//return vec4(dp);
 	if (bw + dp < 0.5) {
 	  return  dark;
@@ -281,7 +278,7 @@ vec4 sobel2(sampler2D texture, sampler2D depth, ivec2 coord)
     float D =  texelFetch(depth, coord, 0).x;
     D = lineariseDepth(D);
     
-    if (sob >0.5) return vec4( normalize(sobel.rgb) * (1.0-D)  , 1.0);//sobel.rgb/(D*3), 1.0 );
+    if (sob >edginess) return vec4( normalize(sobel.rgb) * (1.0-D)  , 1.0);//sobel.rgb/(D*3), 1.0 );
     else return vec4(0.0, 0.0, 0.0, 1.0);
 	//return vec4( sobel.rgb, 1.0 );
     //return vec4(0.0, 0.0, 0.0, 1.0);

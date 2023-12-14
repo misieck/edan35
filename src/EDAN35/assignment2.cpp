@@ -149,7 +149,9 @@ namespace
         GLuint use_blue{ 0u };
         GLuint add_sobel{ 0u };
         GLuint add_white_sobel{ 0u };
-        GLuint only_sobel{ 0u };
+		GLuint only_sobel{ 0u };
+		GLuint intensity{ 0u };
+		GLuint edginess{ 0u };
 	};
 	void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocations& locations);
 
@@ -407,6 +409,8 @@ edan35::Assignment2::run()
     bool add_sobel = false;
     bool add_white_sobel = true;
     bool only_sobel = false;
+	float intensity = 0.99;
+	float edginess = 0.5;
 
 	for (size_t i = 0; i < static_cast<size_t>(lights_nb); ++i) {
 		lightTransforms[i].SetTranslate(glm::vec3(0.0f, 1.25f, 0.0f) * constant::scale_lengths);
@@ -768,7 +772,9 @@ edan35::Assignment2::run()
 			glUniform1i(dithering_shader_locations.use_blue, use_blue);
             glUniform1i(dithering_shader_locations.add_sobel, add_sobel);
             glUniform1i(dithering_shader_locations.add_white_sobel, add_white_sobel);
-            glUniform1i(dithering_shader_locations.only_sobel, only_sobel);
+			glUniform1i(dithering_shader_locations.use_blue, use_blue);
+			glUniform1f(dithering_shader_locations.intensity, sqrt(intensity));
+			glUniform1f(dithering_shader_locations.edginess, edginess);
             
 			bonobo::drawFullscreen();
 
@@ -912,10 +918,12 @@ edan35::Assignment2::run()
 			ImGui::Checkbox("Show light cones wireframe", &show_cone_wireframe);
 			ImGui::Checkbox("Use cubemap", &use_cubemap);
 			ImGui::Checkbox("Use blue noise", &use_blue);
+			ImGui::SliderFloat("Intensity", &intensity, 0.0f, 1.0f);
 			ImGui::Separator();
             ImGui::Checkbox("Add Edges ", &add_sobel);
             ImGui::Checkbox("Bright edges", &add_white_sobel);
             ImGui::Checkbox("Show only edges", &only_sobel);
+			ImGui::SliderFloat("Edginess", &edginess, 0.0f, 1.0f);
             ImGui::Separator();
 			ImGui::Checkbox("Show basis", &show_basis);
 			ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
@@ -1209,7 +1217,9 @@ void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocati
 	locations.use_blue = glGetUniformLocation(dithering_shader, "use_blue");
     locations.add_sobel = glGetUniformLocation(dithering_shader, "add_sobel");
     locations.add_white_sobel = glGetUniformLocation(dithering_shader, "add_white_sobel");
-    locations.only_sobel = glGetUniformLocation(dithering_shader, "only_sobel");
+	locations.only_sobel = glGetUniformLocation(dithering_shader, "only_sobel");
+	locations.intensity = glGetUniformLocation(dithering_shader, "intensity");
+	locations.edginess = glGetUniformLocation(dithering_shader, "edginess");
 	glUniformBlockBinding(dithering_shader, locations.ubo_CameraViewProjTransforms, toU(UBO::CameraViewProjTransforms));
 
 }
