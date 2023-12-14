@@ -149,9 +149,11 @@ namespace
         GLuint use_blue{ 0u };
         GLuint add_sobel{ 0u };
         GLuint add_white_sobel{ 0u };
+        GLuint turn_on_dithering{ 0u };
 		GLuint only_sobel{ 0u };
 		GLuint intensity{ 0u };
 		GLuint edginess{ 0u };
+        GLuint brightness{ 0u };
 	};
 	void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocations& locations);
 
@@ -409,8 +411,10 @@ edan35::Assignment2::run()
     bool add_sobel = false;
     bool add_white_sobel = true;
     bool only_sobel = false;
+    bool turn_on_dithering = false;
 	float intensity = 0.99;
 	float edginess = 0.5;
+    float dither_brightness = 0.5f;
 
 	for (size_t i = 0; i < static_cast<size_t>(lights_nb); ++i) {
 		lightTransforms[i].SetTranslate(glm::vec3(0.0f, 1.25f, 0.0f) * constant::scale_lengths);
@@ -444,7 +448,7 @@ edan35::Assignment2::run()
 	auto seconds_nb = 0.0f;
 	std::array<GLuint64, toU(ElapsedTimeQuery::Count)> pass_elapsed_times;
 	auto lastTime = std::chrono::high_resolution_clock::now();
-	bool show_textures = true;
+	bool show_textures = false;
 	bool show_cone_wireframe = false;
 
 	bool show_logs = true;
@@ -775,6 +779,9 @@ edan35::Assignment2::run()
 			glUniform1i(dithering_shader_locations.use_blue, use_blue);
 			glUniform1f(dithering_shader_locations.intensity, sqrt(intensity));
 			glUniform1f(dithering_shader_locations.edginess, edginess);
+            glUniform1f(dithering_shader_locations.brightness, dither_brightness);
+            glUniform1i(dithering_shader_locations.turn_on_dithering, turn_on_dithering);
+            
             
 			bonobo::drawFullscreen();
 
@@ -915,10 +922,13 @@ edan35::Assignment2::run()
 			ImGui::Checkbox("Pause lights", &are_lights_paused);
 			ImGui::SliderInt("Number of lights", &lights_nb, 1, static_cast<int>(constant::lights_nb));
 			ImGui::Checkbox("Show textures", &show_textures);
-			ImGui::Checkbox("Show light cones wireframe", &show_cone_wireframe);
+			//ImGui::Checkbox("Show light cones wireframe", &show_cone_wireframe);
+            ImGui::Separator();
+            ImGui::Checkbox("Dithering", &turn_on_dithering);
 			ImGui::Checkbox("Use cubemap", &use_cubemap);
 			ImGui::Checkbox("Use blue noise", &use_blue);
 			ImGui::SliderFloat("Intensity", &intensity, 0.0f, 1.0f);
+            ImGui::SliderFloat("Brightness", &dither_brightness, 0.0f, 1.0f);
 			ImGui::Separator();
             ImGui::Checkbox("Add Edges ", &add_sobel);
             ImGui::Checkbox("Bright edges", &add_white_sobel);
@@ -1219,7 +1229,9 @@ void fillDitheringShaderLocations(GLuint dithering_shader, DitheringShaderLocati
     locations.add_white_sobel = glGetUniformLocation(dithering_shader, "add_white_sobel");
 	locations.only_sobel = glGetUniformLocation(dithering_shader, "only_sobel");
 	locations.intensity = glGetUniformLocation(dithering_shader, "intensity");
+    locations.turn_on_dithering = glad_glGetUniformLocation(dithering_shader, "turn_on_dithering");
 	locations.edginess = glGetUniformLocation(dithering_shader, "edginess");
+    locations.brightness = glGetUniformLocation(dithering_shader, "brightness");
 	glUniformBlockBinding(dithering_shader, locations.ubo_CameraViewProjTransforms, toU(UBO::CameraViewProjTransforms));
 
 }

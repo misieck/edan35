@@ -33,6 +33,8 @@ uniform bool use_blue;
 uniform bool add_sobel;
 uniform bool add_white_sobel;
 uniform bool only_sobel;
+uniform bool turn_on_dithering;
+uniform float brightness;
 uniform float intensity;
 uniform float edginess;
 
@@ -43,17 +45,14 @@ uniform vec2 inverse_screen_resolution;
 
 out vec4 frag_color;
 
-vec4 ordered_dithering(vec4 color)
+float ordered_dithering(vec4 color)
 {
 
     vec4 cam_offset = camera.view_projection * vec4(0.0, 0.0, -1.0, 1.0);
-    // cam_offset = vec4(0);
-    int x = 0;
+     int x = 0;
     x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
 	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
-	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
-	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
-
+	
     mat4 dither_pattern = mat4(
 	  -0.5,     0.0,    -0.375,   0.125,
        0.25,   -0.25,    0.375,  -0.125,
@@ -61,33 +60,22 @@ vec4 ordered_dithering(vec4 color)
        0.4375, -0.0625,  0.3125, -0.1875
 	) ;
 
-      // dither_pattern = camera.view_projection * dither_pattern;
-	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
+ 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
     float dither_color = dither_pattern[x%4][y%4];
 	float dp = bw + dither_color * intensity;
 	//float dp = bw + texture(dither_texture, cam_offset.xyz).x - 0.5; 
-	if (dp < 0.5) {
-	  return  dark;
-	}
-	else {
-	  return bright;
-	}
 
-
+    return dp;
 }
 
-vec4 blue_dithering(vec4 color)
+float blue_dithering(vec4 color)
 {
 
     vec4 cam_offset = camera.view_projection * vec4(0.0, 0.0, -1.0, 1.0);
-    // cam_offset = vec4(0);
     int x = 0;
     x = int((gl_FragCoord.x + cam_offset.x * 4/inverse_screen_resolution.x)); // + cam_offset.x/inverse_screen_resolution.x);
 	int y = int((gl_FragCoord.y + cam_offset.x * 4/inverse_screen_resolution.y)); // + cam_offset.y/inverse_screen_resolution.y);
-	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
-	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
-    // dither_pattern = camera.view_projection * dither_pattern;
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
     ivec2 tCoord;
     tCoord.x = int( gl_FragCoord.x)%1024;
@@ -96,19 +84,10 @@ vec4 blue_dithering(vec4 color)
     float dither_color = (texelFetch(dither_simple_texture,  tCoord, 0)).y;
     
 	float dp = bw + (dither_color - 0.5)*intensity;
-    //return vec4(vec3(dither_color), 1.0);
-	
-	if (dp < 0.5) {
-	  return  dark;
-	}
-	else {
-	  return bright;
-	}
-
-
+    return dp;
 }
 
-vec4 dot_dithering(vec4 color)
+float dot_dithering(vec4 color)
 {
 
     vec4 cam_offset = camera.view_projection * vec4(0.0, 0.0, -1.0, 1.0);
@@ -128,52 +107,30 @@ vec4 dot_dithering(vec4 color)
     float dither_color = (texelFetch(dither_bigdot_texture,  tCoord, 0)).y;
     
 	float dp = bw + (dither_color - 0.5)*intensity;
-    //return vec4(vec3(dither_color), 1.0);
+    return dp;
 	
-	if (dp < 0.5) {
-	  return  dark;
-	}
-	else {
-	  return bright;
-	}
-
-
 }
 
 
 
-vec4 cube_dithering(vec4 color, vec3 dir)
+float cube_dithering(vec4 color, vec3 dir)
 {
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
-
 
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
 	float dp = (texture(dither_texture, dir).x - 0.5)*intensity;
-	//return vec4(dp);
-	if (bw + dp < 0.5) {
-	  return  dark;
-	}
-	else {
-	  return bright;
-	}
+    return bw+dp;
 }
 
-vec4 cube_dithering_bayer(vec4 color, vec3 dir)
+float cube_dithering_bayer(vec4 color, vec3 dir)
 {
 	vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
 	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
 
-
 	float bw = dot(vec3(0.3,0.55,0.15), color.xyz);
 	float dp = (texture(dither_texture_bayer, dir).x - 0.5)*intensity;
-	//return vec4(dp);
-	if (bw + dp < 0.5) {
-	  return  dark;
-	}
-	else {
-	  return bright;
-	}
+    return bw + dp;
 }
 
 
@@ -220,18 +177,6 @@ float sobel_kernel(mat3 image){
 
 
 
-float sobel(ivec2 coord, sampler2D texture){
-  mat3 image;
-  for (int i=0; i<3; i++) {
-    for (int j=0; j<3; j++){
-      vec3 tex  = texelFetch(texture, coord + ivec2(i-1,j-1), 0 ).rgb;
-      image[i][j] = max (tex.z, max(tex.x, tex.y)); 
-    }
-  }
-  return sobel_kernel(image);
-}
-
-
 float sobel_depth(vec2 coord, sampler2D texture){
   mat3 image;
   for (int i=0; i<3; i++) {
@@ -272,16 +217,11 @@ vec4 sobel2(sampler2D texture, sampler2D depth, ivec2 coord)
 	vec4 sobel = sqrt((sobel_edge_h * sobel_edge_h) + (sobel_edge_v * sobel_edge_v));
     float sob = max (sobel.z, max(sobel.x, sobel.y));
     sob = length(sobel.xyz);
-    //if (sob >0.9) return vec4(1.0);
-    //else return vec4(0.0,0.0,0.0,1.0);
-	//return vec4( sobel.rgb, 1.0 );
     float D =  texelFetch(depth, coord, 0).x;
-    D = lineariseDepth(D);
+    D = 1.2*lineariseDepth(D);
     
-    if (sob >edginess) return vec4( normalize(sobel.rgb) * (1.0-D)  , 1.0);//sobel.rgb/(D*3), 1.0 );
+    if (sob >(1-edginess)) return vec4( normalize(sobel.rgb) * (max(1.0-D, 0))  , 1.0);
     else return vec4(0.0, 0.0, 0.0, 1.0);
-	//return vec4( sobel.rgb, 1.0 );
-    //return vec4(0.0, 0.0, 0.0, 1.0);
 }
 
 
@@ -298,8 +238,7 @@ void main()
 
 
 	vec3 diffuse  = texelFetch(diffuse_texture,  pixel_coord, 0).rgb;
-    //diffuse  = texelFetch(dither_simple_texture,  pixel_coord, 0).rgb;
-	vec3 specular = texelFetch(specular_texture, pixel_coord, 0).rgb;
+    vec3 specular = texelFetch(specular_texture, pixel_coord, 0).rgb;
 
 	vec3 light_d  = texelFetch(light_d_texture,  pixel_coord, 0).rgb;
 	vec3 light_s  = texelFetch(light_s_texture,  pixel_coord, 0).rgb;
@@ -308,12 +247,13 @@ void main()
 	vec4 rcol =  vec4((ambient + light_d) * diffuse + light_s * specular, 1.0);
 
     vec4 N = texture(normal_texture, texCoords);
-    vec4 sobel_n = vec4(vec3(sobel(pixel_coord, normal_texture)), 1);
+    
     vec4 sobel_d = vec4(vec3(sobel_depth(texCoords, depth_texture)), 1);
 
     //sobel_d = depth_val(depth_texture, texCoords);
-    sobel_n = sobel2(normal_texture, depth_texture, pixel_coord);
+    vec4 sobel_n = sobel2(normal_texture, depth_texture, pixel_coord);
     vec4 sobel = sobel_n;
+
     if (! add_white_sobel){
       sobel = -sobel;
     }
@@ -327,27 +267,40 @@ void main()
     }
     //rcol =  1-sobel_n-0.02;
     
-    
+    float dithering=0.0;
+    if (turn_on_dithering){
+      if (use_cubemap) {
+        if (use_blue) {
+          dithering = cube_dithering(rcol, V);
+        }
+        else {
+          dithering = cube_dithering_bayer(rcol, V);
+        }
+      }
+      else {
+        if (use_blue) {
+          dithering = blue_dithering(rcol);   
+        }
+        else {
+          dithering = ordered_dithering(rcol);
+        }
+      }
+    }
 
-    //frag_color = texture(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
-    //frag_color = texelFetch(specular_texture, pixel_coord, 0);
-    //frag_color = ordered_dithering(rcol);
-	if (use_cubemap) {
-	  if (use_blue) {
-        frag_color = cube_dithering(rcol, V);
-	  }
-	  else {
-	    frag_color = cube_dithering_bayer(rcol, V);
-	  }
+    vec4 dark = vec4(0.2, 0.0, 0.0, 1.0);
+	vec4 bright = vec4(1.0, 1.0, 1.0, 1.0);
+
+    
+    if (dithering < (1-brightness) ) {
+	  frag_color =  dark;
 	}
 	else {
-	  if (use_blue) {
-        frag_color = blue_dithering(rcol);   
-	  }
-	  else {
-	    frag_color = ordered_dithering(rcol);
-	  }
+	  frag_color =  bright;
 	}
+
+    if (!turn_on_dithering){
+      frag_color = rcol;
+    }
     //frag_color = vec4(vec3(lineariseDepth(D)), 1.0);//depth_val(depth_texture, gl_FragCoord.xy * inverse_screen_resolution);
         
 }

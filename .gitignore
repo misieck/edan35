@@ -24,3 +24,9 @@ log.txt
 *.sdf
 *.suo
 *.vcxproj.user
+
+#temps and backups
+*~
+\#*\#
+*.out
+compile_commands.json
